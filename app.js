@@ -140,7 +140,7 @@ function setup(shaders)
     }
 
     function upper_helices(){
-        multRotationY(0) //Mudar depois por uma variavel
+        multRotationY(0) //Mudar depois por uma variavel la fora
         pushMatrix()  
             multTranslation([0, 1.75, 0])
             helice_junction()
@@ -171,7 +171,9 @@ function setup(shaders)
     }
 
     function tail_helices_join(){
-        
+        multTranslation([-6.25, 1.1, 0.1])
+        multRotationZ(60)
+        multTranslation([6.25, -1.1, -0.1])
         pushMatrix()
             multTranslation([-6.25, 1.1, 0.1])
             tail_helices()
@@ -246,6 +248,7 @@ function setup(shaders)
     }
 
     function helecopter(){
+        
         pushMatrix()
             body()         //Esfera principal
         popMatrix()
@@ -256,6 +259,7 @@ function setup(shaders)
         popMatrix()
 
         pushMatrix()
+            
             tail_helices_join()  //Helices pequenas agarradas ao cilindro
         popMatrix()
 
