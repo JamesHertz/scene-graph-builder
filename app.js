@@ -24,6 +24,7 @@ const colors = {
     yellow: vec3(1, 1, 0),
     blue: vec3(0, 0, 1),
     grey: vec3(0.5, 0.5, 0.5),
+    green: vec3(0, 1, 0)
 }
 
 // TODO: config file with the schene graph
@@ -222,7 +223,7 @@ function setup(shaders)
             single_bear_paw()
     }
 
-    function drawScene(){
+    function helecopter(){
         pushMatrix()
             body()
         popMatrix()
@@ -235,6 +236,20 @@ function setup(shaders)
         popMatrix()
             multTranslation([0, -2, 0])
             bearpaws()
+    }
+
+    function floor(){
+        multTranslation([0, -0.25, 0])
+        multScale([ 30, 0.25, 30])
+        draw(CUBE, colors.green) 
+    }
+
+    function drawScene(){
+        pushMatrix()
+            multTranslation([0, 2.25 , 0])
+            helecopter()
+        popMatrix()
+            floor()
     }
 
     function render()
