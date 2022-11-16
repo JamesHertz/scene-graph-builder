@@ -1,12 +1,11 @@
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
-import { ortho, lookAt, flatten , scalem} from "../../libs/MV.js";
+import { ortho, lookAt, flatten , vec3} from "../../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale } from "../../libs/stack.js";
 
 import * as SPHERE from '../../libs/objects/sphere.js'
 import * as CUBE from '../../libs/objects/cube.js';
 import * as CYLINDER from '../../libs/objects/cylinder.js'
 import * as TORUS from '../../libs/objects/torus.js'
-import { mat4, rotateX, scale, translate, vec3 } from "../libs/MV.js";
 import { multRotationX, multRotationZ, multTranslation, popMatrix, pushMatrix } from "../libs/stack.js";
 
 //import * as PYRAMID from '../../libs/objects/pyramid.js'
@@ -93,7 +92,6 @@ function setup(shaders)
             case '5':
                 Mview = lookAt([0, 0, -100], [0, 0, 0], [0,1,0])
         }
-        console.log('It was clicked')
     })
 
 
@@ -173,7 +171,7 @@ function setup(shaders)
             draw(SPHERE)
         popMatrix()
         // look at this later
-            translate([-0.05, 0.2, 0.1])
+            multTranslation([-0.05, 0.2, 0.1])
             tail_helices()
     }
 
@@ -232,6 +230,8 @@ function setup(shaders)
           tail()
         popMatrix()
         pushMatrix()
+            // make it on the ground and them
+            // raise it up right here
             upper_helices()
         popMatrix()
             multTranslation([0, -2, 0])
