@@ -26,6 +26,32 @@ const colors = {
     grey: vec3(0.5, 0.5, 0.5),
 }
 
+// TODO: config file with the schene graph
+/* 
+scene-graph: {
+    translation: [tx, ty, tz]
+    rotation: [rx, ry, rz]
+    scale: [sx, sy, sz]
+    ?draw: <node-id> 
+    children: []
+}
+
+nodes: [
+    {
+        node-id: id1
+        translation: [tx, ty, tz]
+        rotation: [rx, ry, rz]
+        scale: [sx, sy, sz]
+        draw: <node-id> | nodes[]
+    }
+]
+
+
+
+
+
+*/
+
 function setup(shaders)
 {
     let canvas = document.getElementById("gl-canvas");
@@ -179,7 +205,7 @@ function setup(shaders)
             multTranslation([0, -0.25, 0])
             multRotationY(90)
             multRotationX(90)
-            multScale([0.3, 2.5, 0.3])
+            multScale([0.3, 4, 0.3])
             draw(CYLINDER, colors.yellow)
         
     }
@@ -196,7 +222,7 @@ function setup(shaders)
             single_bear_paw()
     }
 
-    function drawSchene(){
+    function drawScene(){
         pushMatrix()
             body()
         popMatrix()
@@ -224,7 +250,7 @@ function setup(shaders)
         // eye, at, up
         //loadMatrix(lookAt([100, 100, 100], [0, 0, 0], [0,1,0]));
         loadMatrix(Mview)
-        drawSchene()
+        drawScene()
     }
 }
 
