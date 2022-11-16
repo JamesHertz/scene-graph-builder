@@ -18,6 +18,10 @@ let gl;
 let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 //let animation = true;   // Animation is running
 
+let SPEED_HELICES = 4;
+
+let angle_helices = 0;
+
 const colors = {
     red: vec3(1, 0, 0),
     yellow: vec3(1, 1, 0),
@@ -54,6 +58,7 @@ nodes: [
 
 function setup(shaders)
 {
+    angle_helices += SPEED_HELICES;
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
 
@@ -140,7 +145,7 @@ function setup(shaders)
     }
 
     function upper_helices(){
-        multRotationY(0) //Mudar depois por uma variavel la fora
+        multRotationY(angle_helices) //Mudar depois por uma variavel la fora
         pushMatrix()  
             multTranslation([0, 1.75, 0])
             helice_junction()
@@ -172,7 +177,7 @@ function setup(shaders)
 
     function tail_helices_join(){
         multTranslation([-6.25, 1.1, 0.1])
-        multRotationZ(60)
+        multRotationZ(angle_helices)
         multTranslation([6.25, -1.1, -0.1])
         pushMatrix()
             multTranslation([-6.25, 1.1, 0.1])
@@ -300,6 +305,7 @@ function setup(shaders)
         // eye, at, up
         //loadMatrix(lookAt([100, 100, 100], [0, 0, 0], [0,1,0]));
         loadMatrix(Mview)
+        angle_helices += SPEED_HELICES;
         drawScene()
     }
 }
