@@ -6,8 +6,8 @@ import * as SPHERE from '../../libs/objects/sphere.js'
 import * as CUBE from '../../libs/objects/cube.js';
 import * as CYLINDER from '../../libs/objects/cylinder.js'
 import * as TORUS from '../../libs/objects/torus.js'
-import { mat4 } from "../libs/MV.js";
-import { multRotationZ, multTranslation, popMatrix, pushMatrix } from "../libs/stack.js";
+import { mat4, rotateX, scale, translate, vec3 } from "../libs/MV.js";
+import { multRotationX, multRotationZ, multTranslation, popMatrix, pushMatrix } from "../libs/stack.js";
 
 //import * as PYRAMID from '../../libs/objects/pyramid.js'
 
@@ -19,6 +19,12 @@ let gl;
 let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 //let animation = true;   // Animation is running
 
+const colors = {
+    red: vec3(1, 0, 0),
+    yellow: vec3(1, 1, 0),
+    blue: vec3(0, 0, 1),
+    grey: vec3(0.5, 0.5, 0.5),
+}
 
 function setup(shaders)
 {
@@ -56,6 +62,9 @@ function setup(shaders)
                 break
             case '4':
                 Mview = lookAt([0, 0, 100], [0, 0, 0], [0,1,0])
+                break
+            case '5':
+                Mview = lookAt([0, 0, -100], [0, 0, 0], [0,1,0])
         }
         console.log('It was clicked')
     })
@@ -77,31 +86,33 @@ function setup(shaders)
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelView()));
     }
 
-    function uploadColor(color){
+    function draw(primitive, color=colors.red){
+        uploadModelView()
         gl.uniform3fv(gl.getUniformLocation(program, "uColor"), color)
+        primitive.draw(gl, program, mode)
     }
 
     function helice(){
         //multTranslation([-2, 1.75, 0])
         multScale([4, 0.4, 0.4])
-        uploadModelView()
-        SPHERE.draw(gl, program, mode)
+        draw(SPHERE, colors.blue)
+    }
+    
+    function helice_junction(){
+        multScale([0.3, 0.6, 0.3])
+        draw(CYLINDER, colors.yellow)
     }
 
     function body(){
         multScale([5, 3, 3])
-        uploadModelView()
-        SPHERE.draw(gl, program, mode)
+        draw(SPHERE)
     }
 
-    function back(){
-        // T R S
-        multTranslation([0, 1.75, 0])
-        multScale([0.3, 0.6, 0.3])
-        uploadModelView()
-        CYLINDER.draw(gl, program, mode)
-    }
     function upper_helices(){
+        pushMatrix()  
+            multTranslation([0, 1.75, 0])
+            helice_junction()
+        popMatrix()
         pushMatrix()  
             multTranslation([-2, 1.75, 0])
             helice()
@@ -111,10 +122,78 @@ function setup(shaders)
             multRotationY(120)
             helice()
         popMatrix()
-
             multTranslation([1, 1.75, -1.75])
             multRotationY(240)
             helice()
+    }
+    
+    function front_tail(){
+        multScale([5, 0.8, 0.35])
+        draw(SPHERE)
+    }
+
+    function tail_helices(){
+        multRotationX(90)
+        multScale([0.2, 0.1, 0.2])
+        draw(CYLINDER, colors.yellow)
+    }
+
+    function back_tail(){
+        pushMatrix()
+        // think about this :)
+            multRotationZ(15)
+            multScale([0.6, 1, 0.2])
+            draw(SPHERE)
+        popMatrix()
+        // look at this later
+            translate([-0.05, 0.2, 0.1])
+            tail_helices()
+    }
+
+    function tail(){
+        // translation: -4, 0.7, 0
+        pushMatrix()
+            front_tail()
+        popMatrix()
+            multTranslation([-2.2, 0.3, 0])
+            back_tail()
+
+    }
+
+    function aux(){
+        multScale([0.2, 1, 0.2])
+        draw(CUBE, colors.grey)
+    }
+
+    function single_bear_paw(){
+        pushMatrix()  
+            multRotationZ(15)
+            multTranslation([1, 0, 0])
+            aux()
+        popMatrix()
+        pushMatrix()  
+            multRotationZ(-15)
+            multTranslation([-1, 0, 0])
+            aux()
+        popMatrix()
+            multTranslation([0, -0.25, 0])
+            multRotationY(90)
+            multRotationX(90)
+            multScale([0.3, 2.5, 0.3])
+            draw(CYLINDER, colors.yellow)
+        
+    }
+
+    function bearpaws(){
+        pushMatrix()
+        //-1 -1.6 -0.77
+            multTranslation([0, 0, -0.77])
+            multRotationX(30)
+            single_bear_paw()
+        popMatrix()
+            multTranslation([0, 0, 0.77])
+            multRotationX(-30)
+            single_bear_paw()
     }
 
     function drawSchene(){
@@ -122,9 +201,14 @@ function setup(shaders)
             body()
         popMatrix()
         pushMatrix()
-            back()
+          multTranslation([-4, 0.7, 0])
+          tail()
         popMatrix()
+        pushMatrix()
             upper_helices()
+        popMatrix()
+            multTranslation([0, -2, 0])
+            bearpaws()
     }
 
     function render()
