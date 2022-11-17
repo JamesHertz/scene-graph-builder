@@ -22,6 +22,8 @@ let SPEED_HELICES = 4;
 
 let angle_helices = 0;
 
+let time = undefined;
+
 const colors = {
     red: vec3(1, 0, 0),
     yellow: vec3(1, 1, 0),
@@ -265,13 +267,13 @@ function setup(shaders)
 
         pushMatrix()
             
-            tail_helices_join()  //Helices pequenas agarradas ao cilindro
+           // tail_helices_join()  //Helices pequenas agarradas ao cilindro
         popMatrix()
 
         pushMatrix()
             // make it on the ground and them
             // raise it up right here
-            multRotationY( (time/100) * 2 * Math.PI)
+            multRotationY( time * 2 * Math.PI)
             multTranslation([0, 1.75, 0])
             upper_helices()
         popMatrix()
@@ -290,12 +292,12 @@ function setup(shaders)
             multTranslation([0, 2.25 , 0])
             helecopter()
         popMatrix()
-            //floor()
+            floor()
     }
 
     function render(timestamp)
     {
-        time = timestamp 
+        time += timestamp / 100
 
         window.requestAnimationFrame(render);
 
@@ -308,7 +310,7 @@ function setup(shaders)
         // eye, at, up
         //loadMatrix(lookAt([100, 100, 100], [0, 0, 0], [0,1,0]));
         loadMatrix(Mview)
-        angle_helices += SPEED_HELICES;
+//        angle_helices += SPEED_HELICES;
         drawScene()
     }
 }
