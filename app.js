@@ -137,19 +137,18 @@ function setup(shaders)
 
     function upper_helices(){
         pushMatrix()  
-            multTranslation([0, 1.75, 0])
             helice_junction()
         popMatrix()
         pushMatrix()  
-            multTranslation([-2, 1.75, 0])
+            multTranslation([-2, 0, 0])
             helice()
         popMatrix()
         pushMatrix()  
-            multTranslation([1, 1.75, 1.75])
+            multTranslation([1, 0, 1.75])
             multRotationY(120)
             helice()
         popMatrix()
-            multTranslation([1, 1.75, -1.75])
+            multTranslation([1, 0, -1.75])
             multRotationY(240)
             helice()
     }
@@ -235,8 +234,8 @@ function setup(shaders)
         pushMatrix()
             // make it on the ground and them
             // raise it up right here
-            let tmp = time / 100
-            multRotationY( tmp * 2 * Math.PI)
+            multRotationY( (time/100) * 2 * Math.PI)
+            multTranslation([0, 1.75, 0])
             upper_helices()
         popMatrix()
             multTranslation([0, -2, 0])
