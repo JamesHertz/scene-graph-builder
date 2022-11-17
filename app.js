@@ -18,6 +18,8 @@ let gl;
 let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 //let animation = true;   // Animation is running
 
+let time = undefined;
+
 const colors = {
     red: vec3(1, 0, 0),
     yellow: vec3(1, 1, 0),
@@ -185,6 +187,7 @@ function setup(shaders)
 
     }
 
+    // rename this later
     function aux(){
         multScale([0.2, 1, 0.2])
         draw(CUBE, colors.grey)
@@ -232,6 +235,8 @@ function setup(shaders)
         pushMatrix()
             // make it on the ground and them
             // raise it up right here
+            let tmp = time / 100
+            multRotationY( tmp * 2 * Math.PI)
             upper_helices()
         popMatrix()
             multTranslation([0, -2, 0])
@@ -249,11 +254,13 @@ function setup(shaders)
             multTranslation([0, 2.25 , 0])
             helecopter()
         popMatrix()
-            floor()
+            //floor()
     }
 
-    function render()
+    function render(timestamp)
     {
+        time = timestamp 
+
         window.requestAnimationFrame(render);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
