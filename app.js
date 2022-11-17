@@ -1,11 +1,11 @@
-import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
-import { ortho, lookAt, flatten , vec3} from "../../libs/MV.js";
-import {modelView, loadMatrix, multRotationY, multScale } from "../../libs/stack.js";
+import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
+import { ortho, lookAt, flatten , vec3} from "../libs/MV.js";
+import {modelView, loadMatrix, multRotationY, multScale } from "../libs/stack.js";
 
-import * as SPHERE from '../../libs/objects/sphere.js'
-import * as CUBE from '../../libs/objects/cube.js';
-import * as CYLINDER from '../../libs/objects/cylinder.js'
-import * as TORUS from '../../libs/objects/torus.js'
+import * as SPHERE from '../libs/objects/sphere.js'
+import * as CUBE from '../libs/objects/cube.js';
+import * as CYLINDER from '../libs/objects/cylinder.js'
+import * as TORUS from '../libs/objects/torus.js'
 import { multRotationX, multRotationZ, multTranslation, popMatrix, pushMatrix } from "../libs/stack.js";
 
 //import * as PYRAMID from '../../libs/objects/pyramid.js'
@@ -18,7 +18,9 @@ let gl;
 let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 //let animation = true;   // Animation is running
 
-let time = undefined;
+let SPEED_HELICES = 4;
+
+let angle_helices = 0;
 
 const colors = {
     red: vec3(1, 0, 0),
@@ -56,6 +58,7 @@ nodes: [
 
 function setup(shaders)
 {
+    angle_helices += SPEED_HELICES;
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
 
@@ -119,6 +122,12 @@ function setup(shaders)
         primitive.draw(gl, program, mode)
     }
 
+    function tiny_helice(){
+        //multTranslation([-2, 1.75, 0])
+        multScale([1, 0.3, 0.15])
+        draw(SPHERE, colors.blue)
+    }
+
     function helice(){
         //multTranslation([-2, 1.75, 0])
         multScale([4, 0.4, 0.4])
@@ -136,6 +145,7 @@ function setup(shaders)
     }
 
     function upper_helices(){
+        multRotationY(angle_helices) //Mudar depois por uma variavel la fora
         pushMatrix()  
             helice_junction()
         popMatrix()
@@ -164,16 +174,33 @@ function setup(shaders)
         draw(CYLINDER, colors.yellow)
     }
 
-    function back_tail(){
+    function tail_helices_join(){
+        multTranslation([-6.25, 1.1, 0.1])
+        multRotationZ(angle_helices)
+        multTranslation([6.25, -1.1, -0.1])
         pushMatrix()
+            multTranslation([-6.25, 1.1, 0.1])
+            tail_helices()
+        popMatrix()
+        pushMatrix()
+            multTranslation([-5.8, 1.1, 0.1])
+            tiny_helice()
+        popMatrix()
+        pushMatrix()
+            multTranslation([-6.7, 1.1, 0.1])
+            tiny_helice()
+        popMatrix()
+    }
+
+    function back_tail(){
+        //pushMatrix()
         // think about this :)
             multRotationZ(15)
             multScale([0.6, 1, 0.2])
             draw(SPHERE)
-        popMatrix()
+        //popMatrix()
         // look at this later
-            multTranslation([-0.05, 0.2, 0.1])
-            tail_helices()
+            
     }
 
     function tail(){
@@ -181,9 +208,11 @@ function setup(shaders)
         pushMatrix()
             front_tail()
         popMatrix()
+        pushMatrix()
             multTranslation([-2.2, 0.3, 0])
             back_tail()
-
+        popMatrix()
+        
     }
 
     // rename this later
@@ -224,13 +253,21 @@ function setup(shaders)
     }
 
     function helecopter(){
+        
         pushMatrix()
-            body()
+            body()         //Esfera principal
         popMatrix()
+
         pushMatrix()
-          multTranslation([-4, 0.7, 0])
-          tail()
+            multTranslation([-4, 0.7, 0])
+            tail()          //Cauda principal e secundaria
         popMatrix()
+
+        pushMatrix()
+            
+            tail_helices_join()  //Helices pequenas agarradas ao cilindro
+        popMatrix()
+
         pushMatrix()
             // make it on the ground and them
             // raise it up right here
@@ -239,7 +276,7 @@ function setup(shaders)
             upper_helices()
         popMatrix()
             multTranslation([0, -2, 0])
-            bearpaws()
+            bearpaws()      //Patas do helicoptero
     }
 
     function floor(){
@@ -271,6 +308,7 @@ function setup(shaders)
         // eye, at, up
         //loadMatrix(lookAt([100, 100, 100], [0, 0, 0], [0,1,0]));
         loadMatrix(Mview)
+        angle_helices += SPEED_HELICES;
         drawScene()
     }
 }
