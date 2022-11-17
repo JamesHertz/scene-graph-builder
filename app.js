@@ -54,6 +54,10 @@ nodes: [
 ]
 */
 
+const MIN_HEL_HEIGHT = 2.25
+
+let h_height = MIN_HEL_HEIGHT
+
 function setup(shaders)
 {
     angle_helices += SPEED_HELICES;
@@ -94,7 +98,19 @@ function setup(shaders)
                 break
             case '5':
                 Mview = lookAt([0, 0, -100], [0, 0, 0], [0,1,0])
+                break
+
+                /*
+            case 'ArrowUp':
+                h_height = Math.min(h_height + 0.5, 100)
+                break
+                 
+            case 'ArrowDown':
+                h_height = Math.max(h_height - 0.5, MIN_HEL_HEIGHT)
+                break
+                */
         }
+        console.log({h_height})
     })
 
 
@@ -275,7 +291,7 @@ function setup(shaders)
 
     function drawScene(){
         pushMatrix()
-            multTranslation([0, 2.25 , 0])
+            multTranslation([0, h_height, 0])
             helecopter()
         popMatrix()
             floor()
