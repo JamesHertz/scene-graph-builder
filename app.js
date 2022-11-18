@@ -1,5 +1,5 @@
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
-import { ortho, lookAt, flatten , vec3, normalMatrix} from "../libs/MV.js";
+import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult} from "../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale} from "../libs/stack.js";
 
 import * as SPHERE from '../libs/objects/sphere.js'
@@ -36,9 +36,9 @@ const colors = {
     green: vec3(0, 1, 0)
 }
 
-const parameters = {
-    gama: 0,
-    tetha: 0
+const axono_pars = {
+    gama: 15,
+    tetha: 15
 }
 
 // TODO: config file with the schene graph
@@ -61,6 +61,13 @@ nodes: [
     }
 ]
 */
+
+const basic_cameras = {
+    front: lookAt([0, 0, 100], [0, 0, 0], [0,1,0]), 
+    top: lookAt([0, 100, 0], [0, 0, 0], [0,0,-1]),
+    right: lookAt([100, 0, 0], [0, 0, 0], [0,1,0]),
+}
+
 
 const MIN_HEL_HEIGHT = 2.25
 
@@ -94,8 +101,8 @@ function setup(shaders)
 
     const folder = gui.addFolder('axonometric parameters')
     
-    folder.add(parameters, 'tetha', 0, 90)
-    folder.add(parameters, 'gama', 0, 90)
+    folder.add(axono_pars, 'tetha', 0, 90)
+    folder.add(axono_pars, 'gama', 0, 90)
 
     gui.open()
     folder.open()
@@ -103,20 +110,22 @@ function setup(shaders)
     window.addEventListener('keydown', e => {
         switch(e.key){
             case '1':
-                //Volta para a axonometrica
+                Mview = getAxonoMatrix()
                 break
             case '2':
-                Mview = lookAt([0, 0, 100], [0, 0, 0], [0,1,0])
+                //Mview = lookAt([0, 0, 100], [0, 0, 0], [0,1,0])
+                Mview = basic_cameras.front
                 break
             case '3':
-                Mview = lookAt([0, 100, 0], [0, 0, 0], [0,0,-1])
+                //Mview = lookAt([0, 100, 0], [0, 0, 0], [0,0,-1])
+                Mview = basic_cameras.top
                 break
             case '4':
-                Mview = lookAt([100, 0, 0], [0, 0, 0], [0,1,0])
+                //Mview = lookAt([100, 0, 0], [0, 0, 0], [0,1,0])
+                Mview = basic_cameras.right
                 break
             case '5':
                 Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
-                //Mview = lookAt([-100, 100, -100], [0, 0, 0], [0,1,0])
                 break
 
             case 'w':
@@ -324,6 +333,20 @@ function setup(shaders)
             floor()
     }
 
+
+    // others functions
+
+
+    function getAxonoMatrix(){
+        const {tetha, gama} = axono_pars
+        const result = mult( 
+            basic_cameras.front,
+            mult( rotateX(tetha), rotateY(gama) )
+        )
+        result.axono = true
+        return result
+    }
+
     function render(timestamp)
     {
         if(last_time == undefined) time = 0
@@ -342,8 +365,9 @@ function setup(shaders)
         
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
     
-        // eye, at, up
-        //loadMatrix(lookAt([100, 100, 100], [0, 0, 0], [0,1,0]));
+        // lookAt(eye, at, up)
+        // if it is an axono matrix just recalculate it :)
+        if(Mview.axono) Mview = getAxonoMatrix()
         loadMatrix(Mview)
         drawScene()
     }
