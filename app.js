@@ -36,8 +36,8 @@ const colors = {
 }
 
 const axono_pars = {
-    gama: -60,
-    tetha: 15
+    theta: -60,
+    gama: 15
 }
 
 // TODO: config file with the schene graph
@@ -101,8 +101,8 @@ function setup(shaders)
 
     const folder = gui.addFolder('axonometric parameters')
     
-    folder.add(axono_pars, 'tetha', -90, 90)
     folder.add(axono_pars, 'gama', -90, 90)
+    folder.add(axono_pars, 'theta', -90, 90)
 
     gui.open()
     folder.open()
@@ -340,10 +340,10 @@ function setup(shaders)
 
 
     function getAxonoMatrix(){
-        const {tetha, gama} = axono_pars
+        const {theta, gama} = axono_pars
         const result = mult( 
             basic_cameras.front,
-            mult( rotateX(tetha), rotateY(gama) )
+            mult( rotateX(gama), rotateY(theta) )
         )
         result.axono = true
         return result
