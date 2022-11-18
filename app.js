@@ -102,6 +102,14 @@ function setup(shaders)
                 Mview = lookAt([0, 0, -100], [0, 0, 0], [0,1,0])
                 break
 
+            case 'w':
+                mode = gl.LINES
+                break
+
+            case 's':
+                mode = gl.TRIANGLES
+                break
+
             case 'ArrowUp':
                 h_height = Math.min(h_height + speed * 1.5, 100)
                 break
