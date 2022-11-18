@@ -1,6 +1,6 @@
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
-import { ortho, lookAt, flatten , vec3} from "../libs/MV.js";
-import {modelView, loadMatrix, multRotationY, multScale } from "../libs/stack.js";
+import { ortho, lookAt, flatten , vec3, normalMatrix} from "../libs/MV.js";
+import {modelView, loadMatrix, multRotationY, multScale} from "../libs/stack.js";
 
 import * as SPHERE from '../libs/objects/sphere.js'
 import * as CUBE from '../libs/objects/cube.js';
@@ -100,7 +100,6 @@ function setup(shaders)
                 Mview = lookAt([0, 0, -100], [0, 0, 0], [0,1,0])
                 break
 
-                /*
             case 'ArrowUp':
                 h_height = Math.min(h_height + 0.5, 100)
                 break
@@ -108,9 +107,7 @@ function setup(shaders)
             case 'ArrowDown':
                 h_height = Math.max(h_height - 0.5, MIN_HEL_HEIGHT)
                 break
-                */
         }
-        console.log({h_height})
     })
 
 
@@ -133,6 +130,9 @@ function setup(shaders)
     function draw(primitive, color=colors.red){
         uploadModelView()
         gl.uniform3fv(gl.getUniformLocation(program, "uColor"), color)
+
+        const mNormal = normalMatrix(modelView(), true)
+        gl.uniformMatrix3fv(gl.getUniformLocation(program, "mNormal"), false, flatten(mNormal));
         primitive.draw(gl, program, mode)
     }
 
