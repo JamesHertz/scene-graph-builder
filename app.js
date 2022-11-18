@@ -97,6 +97,8 @@ function setup(shaders)
     folder.add(parameters, 'tetha', 0, 90)
     folder.add(parameters, 'gama', 0, 90)
 
+    gui.open()
+    folder.open()
 
     window.addEventListener('keydown', e => {
         switch(e.key){
