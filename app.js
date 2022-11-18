@@ -85,7 +85,7 @@ function setup(shaders)
     let mProjection = ortho(-10 * aspect, 10 * aspect, -10, 10, 1, 100)
     let Mview = getAxonoMatrix()
 
-    mode = gl.TRIANGLES//gl.LINES; 
+    mode = gl.TRIANGLES
 
     for(let fig of [SPHERE, CUBE, CYLINDER, TORUS]) fig.init(gl)
 
@@ -97,16 +97,16 @@ function setup(shaders)
     
     window.requestAnimationFrame(render);
 
+    // dat gui stuffs
     const gui = new dat.GUI({name: 'parameters'})
-
     const folder = gui.addFolder('axonometric parameters')
-    
     folder.add(axono_pars, 'gama', -90, 90)
     folder.add(axono_pars, 'theta', -90, 90)
-
     gui.open()
     folder.open()
 
+    // this is to prevent the camera to change when
+    // you are typing the angle on the dat.gui input box.
     gui.domElement.addEventListener('keydown', e => e.stopPropagation())
 
     window.addEventListener('keydown', e => {
@@ -295,7 +295,7 @@ function setup(shaders)
             single_bear_paw()
     }
 
-    function helecopter(){
+    function helicopter(){
 
         pushMatrix()
             body()         //Esfera principal
@@ -330,15 +330,13 @@ function setup(shaders)
     function drawScene(){
         pushMatrix()
             multTranslation([0, h_height, 0])
-            helecopter()
+            helicopter()
         popMatrix()
             floor()
     }
 
 
     // others functions
-
-
     function getAxonoMatrix(){
         const {theta, gama} = axono_pars
         const result = mult( 
