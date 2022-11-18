@@ -6,6 +6,7 @@ import * as SPHERE from '../libs/objects/sphere.js'
 import * as CUBE from '../libs/objects/cube.js';
 import * as CYLINDER from '../libs/objects/cylinder.js'
 import * as TORUS from '../libs/objects/torus.js'
+import * as dat from '../libs/dat.gui.module.js'
 import { multRotationX, multRotationZ, multTranslation, popMatrix, pushMatrix } from "../libs/stack.js";
 
 //import * as PYRAMID from '../../libs/objects/pyramid.js'
@@ -33,6 +34,11 @@ const colors = {
     blue: vec3(0, 0, 1),
     grey: vec3(0.5, 0.5, 0.5),
     green: vec3(0, 1, 0)
+}
+
+const parameters = {
+    gama: 0,
+    tetha: 0
 }
 
 // TODO: config file with the schene graph
@@ -83,6 +89,14 @@ function setup(shaders)
     gl.enable(gl.DEPTH_TEST);   // Enables Z-buffer depth test
     
     window.requestAnimationFrame(render);
+
+    const gui = new dat.GUI({name: 'parameters'})
+
+    const folder = gui.addFolder('axonometric parameters')
+    
+    folder.add(parameters, 'tetha', 0, 90)
+    folder.add(parameters, 'gama', 0, 90)
+
 
     window.addEventListener('keydown', e => {
         switch(e.key){
