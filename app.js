@@ -101,19 +101,20 @@ function setup(shaders)
     window.addEventListener('keydown', e => {
         switch(e.key){
             case '1':
-                Mview = lookAt([0, 0, 100], [0, 0, 0], [0,1,0])
+                //Volta para a axonometrica
                 break
             case '2':
-                Mview = lookAt([0, 100, 0], [0, 0, 0], [0,0,-1])
+                Mview = lookAt([0, 0, 100], [0, 0, 0], [0,1,0])
                 break
             case '3':
-                Mview = lookAt([100, 0, 0], [0, 0, 0], [0,1,0])
+                Mview = lookAt([0, 100, 0], [0, 0, 0], [0,0,-1])
                 break
             case '4':
-                Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
+                Mview = lookAt([100, 0, 0], [0, 0, 0], [0,1,0])
                 break
             case '5':
-                Mview = lookAt([-100, 100, -100], [0, 0, 0], [0,1,0])
+                Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
+                //Mview = lookAt([-100, 100, -100], [0, 0, 0], [0,1,0])
                 break
 
             case 'w':
