@@ -25,6 +25,8 @@ let last_time = undefined
 
 let time = 0;
 
+let speed = 0;
+
 const colors = {
     red: vec3(1, 0, 0),
     yellow: vec3(1, 1, 0),
@@ -101,11 +103,11 @@ function setup(shaders)
                 break
 
             case 'ArrowUp':
-                h_height = Math.min(h_height + 0.5, 100)
+                h_height = Math.min(h_height + speed * 1.5, 100)
                 break
                  
             case 'ArrowDown':
-                h_height = Math.max(h_height - 0.5, MIN_HEL_HEIGHT)
+                h_height = Math.max(h_height - speed * 1.5, MIN_HEL_HEIGHT)
                 break
         }
     })
@@ -300,7 +302,10 @@ function setup(shaders)
     function render(timestamp)
     {
         if(last_time == undefined) time = 0
-        else time += (last_time - timestamp) / 60
+        else{
+            speed = (timestamp - last_time) / 60
+            time +=  speed
+        } 
 
         last_time = timestamp
 
