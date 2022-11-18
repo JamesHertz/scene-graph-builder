@@ -11,7 +11,6 @@ import { multRotationX, multRotationZ, multTranslation, popMatrix, pushMatrix } 
 
 //import * as PYRAMID from '../../libs/objects/pyramid.js'
 
-let Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
 
 /** @type WebGLRenderingContext */
 let gl;
@@ -37,7 +36,7 @@ const colors = {
 }
 
 const axono_pars = {
-    gama: 15,
+    gama: -60,
     tetha: 15
 }
 
@@ -84,6 +83,7 @@ function setup(shaders)
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
 
     let mProjection = ortho(-10 * aspect, 10 * aspect, -10, 10, 1, 100)
+    let Mview = getAxonoMatrix()
 
     mode = gl.TRIANGLES//gl.LINES; 
 
@@ -101,11 +101,13 @@ function setup(shaders)
 
     const folder = gui.addFolder('axonometric parameters')
     
-    folder.add(axono_pars, 'tetha', 0, 90)
-    folder.add(axono_pars, 'gama', 0, 90)
+    folder.add(axono_pars, 'tetha', -90, 90)
+    folder.add(axono_pars, 'gama', -90, 90)
 
     gui.open()
     folder.open()
+
+    gui.domElement.addEventListener('keydown', e => e.stopPropagation())
 
     window.addEventListener('keydown', e => {
         switch(e.key){
@@ -125,7 +127,7 @@ function setup(shaders)
                 Mview = basic_cameras.right
                 break
             case '5':
-                Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
+                //Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
                 break
 
             case 'w':
