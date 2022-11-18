@@ -93,13 +93,13 @@ function setup(shaders)
                 Mview = lookAt([0, 100, 0], [0, 0, 0], [0,0,-1])
                 break
             case '3':
-                Mview = lookAt([-100, 100, -100], [0, 0, 0], [0,1,0])
+                Mview = lookAt([100, 0, 0], [0, 0, 0], [0,1,0])
                 break
             case '4':
                 Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
                 break
             case '5':
-                Mview = lookAt([0, 0, -100], [0, 0, 0], [0,1,0])
+                Mview = lookAt([-100, 100, -100], [0, 0, 0], [0,1,0])
                 break
 
             case 'w':
