@@ -10,7 +10,11 @@ class Node{
         this._rotationZ = undefined
     }
 
+    /*
+    abstract function draw(){
 
+    }
+    */
     get scale(){
 
     }
@@ -52,6 +56,44 @@ class Node{
     }
 
     get modelMatrix(){
+
+    }
+
+}
+
+
+class LeafNode{
+    // fill later
+    constructor(){
+
+    }
+
+
+    // later
+    draw(){
+
+    }
+
+}
+
+
+class NormalNode{
+
+    // fill later
+    constructor(){
+
+    }
+
+    addNode(node){
+
+    }
+
+    getNode(name){
+
+    }
+
+
+    draw(){
 
     }
 
