@@ -69,8 +69,8 @@ const basic_cameras = {
 const heli_consts = {
     MAX_HEIGHT: 20,
     MIN_HEIGHT: 2.25
-
 }
+
 let h_height = heli_consts.MIN_HEIGHT
 
 /*
@@ -98,6 +98,8 @@ const pressed_keys = {
 }
 
 
+// IDEA: when we are not in the camera 1 we shouldn't be
+// able to these parameters
 function setupControllers(){
     const gui = new dat.GUI({name: 'parameters'})
     const folder = gui.addFolder('axonometric parameters')
@@ -108,13 +110,22 @@ function setupControllers(){
     gui.open()
     folder.open()
 
+    // to prevent unwanted results
+    // For example if we are chaing the game or the beta using the keyboard
+    // we surely don't want it to change the camera to front, up or right
     gui.domElement.addEventListener('keydown', e => e.stopPropagation())
+    gui.domElement.addEventListener('keyup', e => e.stopPropagation())
 }
 
 function setup(shaders)
 {
+    // some constants
+
+    const {MAX_HEIGHT, MIN_HEIGHT} = heli_consts
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
+
+    let rout_angle = 0
 
     gl = setupWebGL(canvas);
 
@@ -123,6 +134,7 @@ function setup(shaders)
     let Mview = getAxonoMatrix()
 
     let mProjection;
+
     
 
     mode = gl.TRIANGLES
@@ -288,7 +300,7 @@ function setup(shaders)
             back_tail()
         popMatrix()
             multTranslation([-2.25, 0.4, 0.1])
-            multRotationZ( 2.5 * time * 2 * Math.PI)
+            multRotationZ(rout_angle)
             tail_helices()  //Helices pequenas agarradas ao cilindro
         
     }
@@ -343,7 +355,7 @@ function setup(shaders)
 
         pushMatrix()
             multTranslation([0, 1.75, 0])
-            multRotationY( 2.5 * time * 2 * Math.PI)
+            multRotationY(rout_angle)
             upper_helices()
         popMatrix()
             multTranslation([0, -2, 0])
@@ -386,6 +398,9 @@ function setup(shaders)
 
         last_time = timestamp
 
+        // if we want to do some physics here is the place :)
+        rout_angle = (h_height > MIN_HEIGHT) ? time * 2 * Math.PI * 8 : 0
+
         window.requestAnimationFrame(render);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -395,11 +410,11 @@ function setup(shaders)
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
     
         if(pressed_keys.ArrowUp) {
-            h_height = Math.min(h_height + speed, heli_consts.MAX_HEIGHT)
+            h_height = Math.min(h_height + speed, MAX_HEIGHT)
         }
 
         if(pressed_keys.ArrowDown) {
-            h_height = Math.max(h_height - speed, heli_consts.MIN_HEIGHT)
+            h_height = Math.max(h_height - speed, MIN_HEIGHT)
         }
 
         // lookAt(eye, at, up)
