@@ -17,10 +17,6 @@ let gl;
 
 let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 
-let SPEED_HELICES = 4;
-
-let angle_helices = 0;
-
 let last_time = undefined
 
 let time = 0;
@@ -70,11 +66,23 @@ const basic_cameras = {
 
 const MIN_HEL_HEIGHT = 2.25
 
+let up_speed = 0;
 let h_height = MIN_HEL_HEIGHT
+
+/*
+
+the idea is to have something that will always come to zero
+but what we can do is to change it.
+
+let up_speed;
+
+
+
+
+*/
 
 function setup(shaders)
 {
-    angle_helices += SPEED_HELICES;
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
 
@@ -82,7 +90,11 @@ function setup(shaders)
 
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
 
-    let mProjection = ortho(-10 * aspect, 10 * aspect, -10, 10, 1, 100)
+    let mProjection;
+
+    // set's the mProjection
+    resize_canvas()
+    //let mProjection = ortho(-10 * aspect, 10 * aspect, -10, 10, 1, 1000)
     let Mview = getAxonoMatrix()
 
     mode = gl.TRIANGLES
@@ -139,11 +151,11 @@ function setup(shaders)
                 break
 
             case 'ArrowUp':
-                h_height = Math.min(h_height + speed * 1.5, 100)
+                up_speed = Math.min(up_speed + 0.15, .25)
                 break
                  
             case 'ArrowDown':
-                h_height = Math.max(h_height - speed * 1.5, MIN_HEL_HEIGHT)
+                up_speed = Math.max(up_speed - 0.15, -.25)
                 break
         }
     })
@@ -156,7 +168,8 @@ function setup(shaders)
         canvas.height = window.innerHeight;
 
         aspect = canvas.width / canvas.height;
-        mProjection = ortho(-10 * aspect, 10 * aspect, -10, 10, 1, 200)
+        mProjection = ortho(-25 * aspect, 25 * aspect, -25, 25, 1, 200)
+       // mProjection = ortho(-200 * aspect, 200 * aspect, -200, 200, 1, 200)
         gl.viewport(0,0,canvas.width, canvas.height);
     }
 
@@ -197,7 +210,6 @@ function setup(shaders)
     }
 
     function upper_helices(){
-        multRotationY(angle_helices) //Mudar depois por uma variavel la fora
         pushMatrix()  
             upper_helice_junction()
         popMatrix()
@@ -307,9 +319,10 @@ function setup(shaders)
         popMatrix()
 
         pushMatrix()
-          multTranslation([-6.25, 1.1, 0.1])
-          multRotationZ( 2.5 * time * 2 * Math.PI)
-          tail_helices()  //Helices pequenas agarradas ao cilindro
+            multTranslation([-6.25, 1.1, 0.1])
+            multRotationZ(turn_angle)
+            multRotationZ( 2.5 * time * 2 * Math.PI)
+            tail_helices()  //Helices pequenas agarradas ao cilindro
         popMatrix()
 
         pushMatrix()
@@ -323,7 +336,7 @@ function setup(shaders)
 
     function floor(){
         multTranslation([0, -0.25, 0])
-        multScale([ 30, 0.25, 30])
+        multScale([ 100, 0.25, 100])
         draw(CUBE, colors.green) 
     }
 
@@ -365,6 +378,19 @@ function setup(shaders)
         
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
     
+        // pretty good idea but you gonna clean up this thing a bit..
+        if(up_speed){
+            let next_speed = up_speed  - up_speed * 0.01
+            up_speed = (Math.abs(up_speed) < 0.1) ? 0 : next_speed;
+        }
+
+
+        //h_height = Math.min( h_height + up_speed, 8)
+        if(up_speed < 0)
+            h_height = Math.max(h_height + up_speed, MIN_HEL_HEIGHT)
+        else
+            h_height = Math.min(h_height + up_speed, 20)
+
         // lookAt(eye, at, up)
         // if it is an axono matrix just recalculate it :)
         if(Mview.axono) Mview = getAxonoMatrix()
