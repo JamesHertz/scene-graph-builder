@@ -59,27 +59,57 @@ nodes: [
 
 const basic_cameras = {
     front: lookAt([0, 0, 100], [0, 0, 0], [0,1,0]), 
+    // ask about this...
     top: lookAt([0, 100, 0], [0, 0, 0], [0,0,-1]),
     right: lookAt([100, 0, 0], [0, 0, 0], [0,1,0]),
 }
 
 
-const MIN_HEL_HEIGHT = 2.25
 
-let up_speed = 0;
-let h_height = MIN_HEL_HEIGHT
+const heli_consts = {
+    MAX_HEIGHT: 20,
+    MIN_HEIGHT: 2.25
+
+}
+let h_height = heli_consts.MIN_HEIGHT
 
 /*
 
 the idea is to have something that will always come to zero
 but what we can do is to change it.
 
-let up_speed;
 
+problems to solve:
+    when we are in up view we need to change the projection matrix
+    to capture a wider area..
 
+    I sort of invented a very trick way to change the height but
+    what we actually have to do is to keep increasing the height
+    while the key is pressed.
 
 
 */
+
+// think seriously about the config file ...
+
+const pressed_keys = {
+    ArrowUp: false,
+    ArrowDown: false
+}
+
+
+function setupControllers(){
+    const gui = new dat.GUI({name: 'parameters'})
+    const folder = gui.addFolder('axonometric parameters')
+    folder.add(axono_pars, 'gama', -90, 90)
+    folder.add(axono_pars, 'theta', -90, 90)
+
+
+    gui.open()
+    folder.open()
+
+    gui.domElement.addEventListener('keydown', e => e.stopPropagation())
+}
 
 function setup(shaders)
 {
@@ -90,18 +120,16 @@ function setup(shaders)
 
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
 
-    let mProjection;
-
-    // set's the mProjection
-    resize_canvas()
-    //let mProjection = ortho(-10 * aspect, 10 * aspect, -10, 10, 1, 1000)
     let Mview = getAxonoMatrix()
+
+    let mProjection;
+    
 
     mode = gl.TRIANGLES
 
     for(let fig of [SPHERE, CUBE, CYLINDER, TORUS]) fig.init(gl)
 
-    resize_canvas();
+    resize_canvas()
     window.addEventListener("resize", resize_canvas);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -109,17 +137,10 @@ function setup(shaders)
     
     window.requestAnimationFrame(render);
 
-    // dat gui stuffs
-    const gui = new dat.GUI({name: 'parameters'})
-    const folder = gui.addFolder('axonometric parameters')
-    folder.add(axono_pars, 'gama', -90, 90)
-    folder.add(axono_pars, 'theta', -90, 90)
-    gui.open()
-    folder.open()
-
+    setupControllers()
+   
     // this is to prevent the camera to change when
     // you are typing the angle on the dat.gui input box.
-    gui.domElement.addEventListener('keydown', e => e.stopPropagation())
 
     window.addEventListener('keydown', e => {
         switch(e.key){
@@ -150,14 +171,16 @@ function setup(shaders)
                 mode = gl.TRIANGLES
                 break
 
-            case 'ArrowUp':
-                up_speed = Math.min(up_speed + 0.15, .25)
-                break
-                 
-            case 'ArrowDown':
-                up_speed = Math.max(up_speed - 0.15, -.25)
-                break
+            default:
+                if(e.key in pressed_keys)
+                    pressed_keys[e.key] = true
         }
+    })
+
+
+    window.addEventListener('keyup', e => {
+        if(e.key in pressed_keys)
+            pressed_keys[e.key] = false
     })
 
 
@@ -168,10 +191,10 @@ function setup(shaders)
         canvas.height = window.innerHeight;
 
         aspect = canvas.width / canvas.height;
-        mProjection = ortho(-25 * aspect, 25 * aspect, -25, 25, 1, 200)
-       // mProjection = ortho(-200 * aspect, 200 * aspect, -200, 200, 1, 200)
+        mProjection = ortho(-30 * aspect, 30 * aspect, -30, 30, 1, 200) 
         gl.viewport(0,0,canvas.width, canvas.height);
     }
+
 
     function uploadModelView()
     {
@@ -188,13 +211,11 @@ function setup(shaders)
     }
 
     function tiny_helice(){
-        //multTranslation([-2, 1.75, 0])
         multScale([1, 0.3, 0.15])
         draw(SPHERE, colors.blue)
     }
 
     function helice(){
-        //multTranslation([-2, 1.75, 0])
         multScale([4, 0.4, 0.4])
         draw(SPHERE, colors.blue)
     }
@@ -259,7 +280,6 @@ function setup(shaders)
     }
 
     function tail(){
-        // translation: -4, 0.7, 0
         pushMatrix()
             front_tail()
         popMatrix()
@@ -267,11 +287,14 @@ function setup(shaders)
             multTranslation([-2.2, 0.3, 0])
             back_tail()
         popMatrix()
+            multTranslation([-2.25, 0.4, 0.1])
+            multRotationZ( 2.5 * time * 2 * Math.PI)
+            tail_helices()  //Helices pequenas agarradas ao cilindro
         
     }
 
     // rename this later
-    function aux(){
+    function bp_support(){
         multScale([0.2, 1, 0.2])
         draw(CUBE, colors.grey)
     }
@@ -280,12 +303,12 @@ function setup(shaders)
         pushMatrix()  
             multRotationZ(15)
             multTranslation([1, 0, 0])
-            aux()
+            bp_support()
         popMatrix()
         pushMatrix()  
             multRotationZ(-15)
             multTranslation([-1, 0, 0])
-            aux()
+            bp_support()
         popMatrix()
             multTranslation([0, -0.25, 0])
             multRotationY(90)
@@ -297,7 +320,6 @@ function setup(shaders)
 
     function bearpaws(){
         pushMatrix()
-        //-1 -1.6 -0.77
             multTranslation([0, 0, -0.77])
             multRotationX(30)
             single_bear_paw()
@@ -318,11 +340,6 @@ function setup(shaders)
             tail()          //Cauda principal e secundaria
         popMatrix()
 
-        pushMatrix()
-            multTranslation([-6.25, 1.1, 0.1])
-            multRotationZ( 2.5 * time * 2 * Math.PI)
-            tail_helices()  //Helices pequenas agarradas ao cilindro
-        popMatrix()
 
         pushMatrix()
             multTranslation([0, 1.75, 0])
@@ -341,7 +358,7 @@ function setup(shaders)
 
     function drawScene(){
         pushMatrix()
-            multTranslation([0, h_height, 0])
+            multTranslation([0, h_height, 20])
             helicopter()
         popMatrix()
             floor()
@@ -377,18 +394,13 @@ function setup(shaders)
         
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
     
-        // pretty good idea but you gonna clean up this thing a bit..
-        if(up_speed){
-            let next_speed = up_speed  - up_speed * 0.01
-            up_speed = (Math.abs(up_speed) < 0.1) ? 0 : next_speed;
+        if(pressed_keys.ArrowUp) {
+            h_height = Math.min(h_height + speed, heli_consts.MAX_HEIGHT)
         }
 
-
-        //h_height = Math.min( h_height + up_speed, 8)
-        if(up_speed < 0)
-            h_height = Math.max(h_height + up_speed, MIN_HEL_HEIGHT)
-        else
-            h_height = Math.min(h_height + up_speed, 20)
+        if(pressed_keys.ArrowDown) {
+            h_height = Math.max(h_height - speed, heli_consts.MIN_HEIGHT)
+        }
 
         // lookAt(eye, at, up)
         // if it is an axono matrix just recalculate it :)
