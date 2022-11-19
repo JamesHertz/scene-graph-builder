@@ -320,7 +320,6 @@ function setup(shaders)
 
         pushMatrix()
             multTranslation([-6.25, 1.1, 0.1])
-            multRotationZ(turn_angle)
             multRotationZ( 2.5 * time * 2 * Math.PI)
             tail_helices()  //Helices pequenas agarradas ao cilindro
         popMatrix()
