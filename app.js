@@ -32,7 +32,7 @@ const colors = {
 }
 
 const axono_pars = {
-    theta: -60,
+    theta: 60,
     gama: 15
 }
 
@@ -68,10 +68,15 @@ const basic_cameras = {
 
 const heli_consts = {
     MAX_HEIGHT: 20,
-    MIN_HEIGHT: 2.25
+    MIN_HEIGHT: 2.25,
+    MAX_SPEED: -360,
 }
 
+// helicopter infos
 let h_height = heli_consts.MIN_HEIGHT
+let h_angle = 0
+let h_forward_speed = 0
+let h_slope_angle = 0
 
 /*
 
@@ -94,7 +99,8 @@ problems to solve:
 
 const pressed_keys = {
     ArrowUp: false,
-    ArrowDown: false
+    ArrowDown: false,
+    ArrowLeft: false
 }
 
 
@@ -121,7 +127,7 @@ function setup(shaders)
 {
     // some constants
 
-    const {MAX_HEIGHT, MIN_HEIGHT} = heli_consts
+    const {MAX_HEIGHT, MIN_HEIGHT, MAX_SPEED} = heli_consts
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
 
@@ -370,7 +376,10 @@ function setup(shaders)
 
     function drawScene(){
         pushMatrix()
+            multRotationY(h_angle)
             multTranslation([0, h_height, 20])
+            multRotationZ(h_slope_angle)
+            multRotationY(180)
             helicopter()
         popMatrix()
             floor()
@@ -417,11 +426,24 @@ function setup(shaders)
             h_height = Math.max(h_height - speed, MIN_HEIGHT)
         }
 
+        // think about this later?
+        // would it better to use acceleration?
+        if(pressed_keys.ArrowLeft){
+            h_forward_speed = Math.max(h_forward_speed - 10,  MAX_SPEED)
+        }
+
+        if(h_forward_speed){
+            h_forward_speed = Math.min(0, h_forward_speed + 2.5)
+            console.log(h_forward_speed)
+        }
+
+        h_angle += h_forward_speed / 100
+        h_slope_angle = h_forward_speed/MAX_SPEED * 30
         // lookAt(eye, at, up)
         // if it is an axono matrix just recalculate it :)
         if(Mview.axono) Mview = getAxonoMatrix()
         loadMatrix(Mview)
-        drawScene()
+        drawScene() // this mess will be fixed :)
     }
 }
 
