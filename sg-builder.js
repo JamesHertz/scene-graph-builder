@@ -1,4 +1,4 @@
-import {rotateX, rotateY, rotateZ, mat4, mult, translate, scalem} from "../libs/MV.js";
+import {rotateX, rotateY, rotateZ, mat4, vec4, mult, translate, scalem} from "../libs/MV.js";
 
 // transformations...
 // abstract base transformation
@@ -107,7 +107,9 @@ class Node{
     }
 
     calc_model_matrix(){
-        let modelMatrix = mat4()
+        // apply the extra transformations first :)
+        let modelMatrix = this.trans.reduce(
+            (o, t) => mult(o, t.transMatrix), mat4())
 
         for(let k of [
             '_translation',
@@ -121,8 +123,7 @@ class Node{
                 modelMatrix = mult(modelMatrix, trans.transMatrix)
         }
 
-        // lastly apply all the remaing transformations ...
-        return this.trans.reduce((o, t) => mult(o, t.transMatrix), modelMatrix)
+        return modelMatrix
     }
   
     get name(){
@@ -217,7 +218,6 @@ class LeafNode extends Node{
 
 }
 
-
 class NormalNode extends Node{
 
     // fill later
@@ -260,7 +260,6 @@ class NormalNode extends Node{
     }
 
 }
-
 
 // node type
 const LEAF = 'leaf', REGULAR = 'regular'
@@ -370,10 +369,3 @@ export {
     SceneGraph,
     Node
 }
-
-
-
-const node = new Node('james')
-
-node.addTransformation(new Translation([1, 1, 1]))
-console.log(node.modelMatrix)
