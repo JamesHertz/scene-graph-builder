@@ -218,7 +218,7 @@ class LeafNode extends Node{
 
 }
 
-class NormalNode extends Node{
+class RegularNode extends Node{
 
     // fill later
     constructor(name){
@@ -271,7 +271,8 @@ const optional_keys= [
     "rotation-z",
     "translation",
     "scale",
-    "name"
+    "name",
+    "extra-trans"
 ]
 
 // required keys for leaf and regular nodes respectively
@@ -307,14 +308,15 @@ function createNode(node, optKeys, reqkeys){
     return obj
 }
 
+
 function parseNode(node, primitives){
     const type = node.type
     if(type == LEAF){
         // TODO: check for valid primitive here
-        return createNode(node, [optional_keys, leaf_keys])
+        const node = createNode(node, [optional_keys, leaf_keys])
     }else if(type == REGULAR){
-        const node = createNode(node, [optional_keys, regular_keys])
         // TODO: solve the problem with the children
+        const node = createNode(node, [optional_keys, regular_keys])
     }else{
         let txt = JSON.stringify(node)
         throw new Error(
@@ -330,10 +332,12 @@ function parseScene(scene_desc){
 
     let scene = createNode(scene_desc, ['nodes'], ['root']) 
 
+    // check if nodes is an array
     if(scene.nodes){
         // do something fun :)
     }
 
+    // check if root is an object
     scene.root = parseNode(scene.root)
     return scene
 }
@@ -363,7 +367,6 @@ class SceneGraph{
     }
 
 } 
-
 
 export {
     SceneGraph,
