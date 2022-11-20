@@ -1,4 +1,4 @@
-import {rotateX, rotateY, rotateZ, mat4, vec4, mult, translate, scalem} from "../libs/MV.js";
+import {rotateX, rotateY, rotateZ, mat4, vec3, mult, translate, scalem} from "../libs/MV.js";
 
 // transformations...
 // abstract base transformation
@@ -192,14 +192,18 @@ class Node{
 
 }
 
-
+// think about the rest later
 class LeafNode extends Node{
     // fill later
-    constructor(name, primitive){
+    constructor(name, primitive, color){
         super(name)
         this._primitive = primitive
+        this._color = color
     }
 
+    get color(){
+        return this._color
+    }
 
     get primitive(){
         return this._primitive
@@ -213,7 +217,7 @@ class LeafNode extends Node{
      */
     draw(stack, draw){
         const tmp = stack[stack.length - 1]
-        draw(this._primitive, mult(tmp, this.modelMatrix))
+        draw(this.primitive, mult(tmp, this.modelMatrix), this.color)
     }
 
 }
@@ -279,6 +283,14 @@ const optional_keys= [
 const leaf_keys = ['primitive', 'color']
 const regular_keys = ['children']
 
+const colors = {
+    red: vec3(1, 0, 0),
+    yellow: vec3(1, 1, 0),
+    blue: vec3(0, 0, 1),
+    grey: vec3(0.5, 0.5, 0.5),
+    green: vec3(0, 1, 0)
+}
+
 /**
  * 
  * @param {Object} node 
@@ -309,16 +321,53 @@ function createNode(node, optKeys, reqkeys){
 }
 
 
+function fillNodeInfo(node, info){
+    let extTrans = info['extra-trans']
+    if(extTrans){
+        if(!(extTrans instanceof Array))
+            throw new Error(`Expected an array as 'extra-trans' but found ${trans.constructor}`)
+        for(let t of extTrans)
+            node.addTransformation(parseTrans(t))
+    }
+
+    for(let k of ['scale', 'translation']){
+        let trans = info[k]
+        if(trans){
+            if(trans instanceof Array 
+                && trans.length == 3 
+                && trans.every(e => typeof(e) == 'number')){
+                    node[k] = trans
+            }else
+                throw Error(
+                    `Invalid ${k}. Expected an array of 3 numbers.`
+                )
+
+        }
+    }
+}
+
 function parseNode(node, primitives){
     const type = node.type
     if(type == LEAF){
-        // TODO: check for valid primitive here
         const node = createNode(node, [optional_keys, leaf_keys])
+        const {name, primitive, color} = node
+
+        if(typeof(name) != 'string')
+            throw new Error(`Expected a string but found a ${typeof(name)}`)
+
+        if(!(primitive in primitives))
+            throw new Error(`Invalid primitive ${primitive}`)
+
+        if(!(color in colors))
+            throw new Error(`Invalid color ${primitive}`)
+
+        const leafNode = new LeafNode(name, primitive, color)
+
+        return fillNodeInfo(leafNode, node)
     }else if(type == REGULAR){
-        // TODO: solve the problem with the children
+        // ...
         const node = createNode(node, [optional_keys, regular_keys])
     }else{
-        let txt = JSON.stringify(node)
         throw new Error(
             `Unexpected node type in ${txt}\nNode type should be either '${REGULAR}' or '${LEAF}'.`
         )
@@ -326,7 +375,7 @@ function parseNode(node, primitives){
 
 }
 
-function parseScene(scene_desc){
+function parseScene(scene_desc, primitives){
     if(typeof(scene_desc) != 'object')
         throw new Error('Invalid scene_desc')
 
@@ -351,7 +400,7 @@ class SceneGraph{
      */
     // think about this...
     constructor(scene_desc, primitives){
-        const {root, nodes} = parseScene(scene_desc)
+        const {root, nodes} = parseScene(scene_desc, primitives)
         this.root = root
         this.nodes = nodes
     }
@@ -372,3 +421,4 @@ export {
     SceneGraph,
     Node
 }
+
