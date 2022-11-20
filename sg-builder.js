@@ -1,60 +1,128 @@
 import {rotateX, rotateY, rotateZ, mat4, mult, translate, scalem} from "../libs/MV.js";
 
-// node type
-const LEAF = 'leaf', REGULAR = 'regular'
+// transformations...
+// abstract base transformation
+class BaseTransformation{
+    // think about the parent node ...
+    constructor(value, parentNode){ 
+        this._parent = parentNode
+        this.value = value 
+    }
 
-// node's keys
-const optional_keys= [
-    "rotation-x",
-    "rotation-y",
-    "rotation-z",
-    "translation",
-    "scale",
-    "name"
-]
+    get value(){
+        return this._value
+    }
 
-// required keys for leaf and regular nodes respectively
-const leaf_keys = ['primitive', 'color']
-const regular_keys = ['children']
+    set value(newValue){
+        this._value = newValue
+        this.dirty = true
 
+        // if the parent is set then :)
+        if(this._parent) this._parent.changeHandler()
+    }
+
+    get parent(){
+        return this._parent
+    }
+
+    set parent(newParent){
+        this._parent = newParent
+
+        // think about this ...
+        if(this.dirty) this._parent.changeHandler()
+    }
+
+    get transMatrix(){
+        if(this.dirty){
+            this.dirty = false
+            this._transMatrix = this.calc_trans_matrix()
+        }
+        return this._transMatrix
+    }
+}
+
+class Translation extends BaseTransformation{
+    constructor(value, parentNode){
+        super(value, parentNode)
+    }
+
+    calc_trans_matrix(){
+        return translate(...this.value)
+    }
+
+} 
+
+class Scale extends BaseTransformation{
+    constructor(value, parentNode){
+        super(value, parentNode)
+    }
+
+    calc_trans_matrix(){
+        return scalem(...this.value)
+    }
+
+}
+
+class RotationX extends BaseTransformation{
+    constructor(value, parentNode){
+        super(value, parentNode)
+    }
+
+    calc_trans_matrix(){
+        return rotateX(this.value)
+    }
+}
+
+class RotationY extends BaseTransformation{
+    constructor(value, parentNode){
+        super(value, parentNode)
+    }
+
+    calc_trans_matrix(){
+        return rotateY(this.value)
+    }
+}
+
+class RotationZ extends BaseTransformation{
+    constructor(value, parentNode){
+        super(value, parentNode)
+    }
+
+    calc_trans_matrix(){
+        return rotateZ(this.value)
+    }
+}
 
 // think about the calc_model_matrix
 class Node{
     
     constructor(name){
         this._name = name
-        this.change = true // means a change was made so the modelMatrix needs to be recalculated
-        /*
-        this._translation = undefined
-        this._scale = undefined 
-        this._rotationX = undefined
-        this._rotationY = undefined
-        this._rotationZ = undefined
-        */
+        this.dirty = true // means a change was made so the modelMatrix needs to be recalculated
+        this.trans = [] // adicionals transformations that can be added to the node
     }
     
-    newChange(){
-        this.change = true
+    changeHandler(){
+        this.dirty = true
     }
 
     calc_model_matrix(){
         let modelMatrix = mat4()
-        if(this._translation)
-            modelMatrix = mult(modelMatrix, translate(...this._translation))
 
-        for(let [field, update] of [
-            ['_rotationX', rotateX],
-            ['_rotationY', rotateY],
-            ['_rotationZ', rotateZ]
+        for(let k of [
+            '_translation',
+            '_rotationZ',
+            '_rotationY',
+            '_rotationX',
+            '_scale'
         ]){
-            if(this[field]) 
-                modelMatrix = mult(modelMatrix, update(this[field]))
+            const trans = this[k]
+            if(trans)
+                modelMatrix = mult(modelMatrix, trans.transMatrix)
         }
 
-        if(this._scale)
-            modelMatrix = mult(modelMatrix, scalem(...this._scale))
-
-        this._modelMatrix = modelMatrix
+        // lastly apply all the remaing transformations ...
+        return this.trans.reduce((o, t) => mult(o, t.transMatrix), modelMatrix)
     }
   
     get name(){
@@ -62,54 +130,60 @@ class Node{
     }
 
     get scale(){
-        return this._scale
+        return this._scale.value
     }
 
     set scale(newScale){
-        this._scale = newScale
+        this._scale = new Scale(newScale, this)
     } 
 
     get translation(){
-        return this._translation
+        return this._translation.value
     }
 
     set translation(newTranslation){
-        this._translation = newTranslation
-        this.newChange()
+        this._translation = new Translation(newTranslation, this)
     }
 
     get rotationX(){
-        return this._rotationX
+        return this._rotationX.value
     }
 
     set rotationX(newRotationX){
-        this._rotationX = newRotationX
-        this.newChange()
+        this._rotationX = new RotationX(newRotationX, this)
     }
 
     get rotationY(){
-        return this._rotationY
+        return this._rotationY.value
     }
 
     set rotationY(newRotationY){
-        this._rotationY = newRotationY
-        this.newChange()
+        this._rotationY = new RotationY(newRotationY, this)
     }
 
     get rotationZ(){
-        return this._rotationZ
+        return this._rotationZ.value
     }
 
     set rotationZ(newRotationZ){
-        this._rotationZ = newRotationZ
-        this.newChange()
+        this._rotationZ = new RotationZ(newRotationZ, this)
+    }
+
+    addTransformation(trans){
+        trans.parent = this
+        this.trans.push(trans)
+    }
+
+    removeTransformation(trans){
+        this.trans = this.trans.filter( t => t != trans)
+        trans.parent = null
     }
 
     // calculates the model matrix lazily :)
     get modelMatrix(){
-        if(this.change){
-            this.calc_model_matrix()
-            this.change = false
+        if(this.dirty){
+            this._modelMatrix = this.calc_model_matrix()
+            this.dirty = false
         }
 
         return this._modelMatrix
@@ -187,6 +261,23 @@ class NormalNode extends Node{
 
 }
 
+
+// node type
+const LEAF = 'leaf', REGULAR = 'regular'
+
+// node's keys
+const optional_keys= [
+    "rotation-x",
+    "rotation-y",
+    "rotation-z",
+    "translation",
+    "scale",
+    "name"
+]
+
+// required keys for leaf and regular nodes respectively
+const leaf_keys = ['primitive', 'color']
+const regular_keys = ['children']
 
 /**
  * 
@@ -281,3 +372,8 @@ export {
 }
 
 
+
+const node = new Node('james')
+
+node.addTransformation(new Translation([1, 1, 1]))
+console.log(node.modelMatrix)
