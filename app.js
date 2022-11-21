@@ -68,6 +68,7 @@ const heli_consts = {
     MAX_HEIGHT: 20,
     MIN_HEIGHT: 2.25,
     MAX_SPEED: -3.6,
+    MAX_SLOPE_ANGLE: 30
 }
 
 // helicopter infos
@@ -139,7 +140,7 @@ function setup(shaders)
 {
     // some constants
 
-    const {MAX_HEIGHT, MIN_HEIGHT, MAX_SPEED} = heli_consts
+    const {MAX_HEIGHT, MIN_HEIGHT, MAX_SPEED, MAX_SLOPE_ANGLE} = heli_consts
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
 
