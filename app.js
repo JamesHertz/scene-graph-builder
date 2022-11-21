@@ -1,5 +1,5 @@
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
-import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, inverse} from "../libs/MV.js";
+import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, inverse, translate} from "../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale} from "../libs/stack.js";
 
 import * as SPHERE from '../libs/objects/sphere.js'
@@ -64,16 +64,17 @@ const basic_cameras = {
     right: lookAt([100, 0, 0], [0, 0, 0], [0,1,0]),
 }
 
-const heli_consts = {
-    MAX_HEIGHT: 20,
-    MIN_HEIGHT: 2.25,
-    MAX_SPEED: -3.6,
-    MAX_SLOPE_ANGLE: 30
-}
+
+const MAX_SLOPE_ANGLE = 30,
+      MAX_SPEED = -3.6,
+      MAX_HEIGHT = 20,
+      MIN_HEIGHT = 2.25,
+      MIN_FLY_HEIGHT = Math.tan(Math.PI * MAX_SLOPE_ANGLE / 180)*2 + MIN_HEIGHT
+
 
 // helicopter infos
 // clea up this thing later
-let h_height = heli_consts.MIN_HEIGHT
+let h_height = MIN_HEIGHT
 let h_angle = 0
 let h_forward_speed = 0
 let h_slope_angle = 0
@@ -140,7 +141,6 @@ function setup(shaders)
 {
     // some constants
 
-    const {MAX_HEIGHT, MIN_HEIGHT, MAX_SPEED, MAX_SLOPE_ANGLE} = heli_consts
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
 
@@ -375,7 +375,6 @@ function setup(shaders)
             tail()          //Cauda principal e secundaria
         popMatrix()
 
-
         pushMatrix()
             multTranslation([0, 1.75, 0])
             multRotationY(rout_angle)
@@ -436,18 +435,10 @@ function setup(shaders)
         gl.useProgram(program);
         
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
-    
-        if(pressed_keys.ArrowUp) {
-            h_height = Math.min(h_height + speed, MAX_HEIGHT)
-        }
-
-        if(pressed_keys.ArrowDown) {
-            h_height = Math.max(h_height - speed, MIN_HEIGHT)
-        }
-
+ 
         // think about this later?
         // would it better to use acceleration?
-        if(pressed_keys.ArrowLeft){
+        if(pressed_keys.ArrowLeft && h_height > MIN_FLY_HEIGHT){
             h_forward_speed = Math.max(h_forward_speed - 0.1,  MAX_SPEED)
         }
 
@@ -457,12 +448,23 @@ function setup(shaders)
         }
 
         h_slope_angle = h_forward_speed/MAX_SPEED * 30
+   
+        if(pressed_keys.ArrowUp) {
+            h_height = Math.min(h_height + speed, MAX_HEIGHT)
+        }
+
+        if(pressed_keys.ArrowDown) {
+            const min_h = (h_slope_angle> 0) ? MIN_FLY_HEIGHT : MIN_HEIGHT 
+            h_height = Math.max(h_height - speed, min_h)
+        }
+
         // lookAt(eye, at, up)
         // if it is an axono matrix just recalculate it :)
 
         // some fun stuffs
-        if(heliModelView)
+        if(heliModelView){
             heliModel = mult(rotateY(h_forward_speed), mult( inverse(Mview), heliModelView))
+        }
         
         // calc
 
