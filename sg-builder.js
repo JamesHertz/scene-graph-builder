@@ -276,7 +276,8 @@ const optional_keys= [
     "translation",
     "scale",
     "name",
-    "extra-trans"
+    "extra-trans",
+    "type" // it's required but it's here just to not guarantee not problem will happen
 ]
 
 // required keys for leaf and regular nodes respectively
@@ -321,6 +322,40 @@ function createNode(node, optKeys, reqkeys){
 }
 
 
+const trans_type1 = {
+    'scale': Scale,
+    'translation': Translation
+}
+
+const trans_type2 = {
+    'rotation-x': RotationX,
+    'rotation-y': RotationY,
+    'rotation-z': RotationZ
+}
+
+// TODO: think about the txt ....
+// TODO: refactor the Error parsing 'extra-trans' ....
+function parseTrans(trans){
+    const {type, value} = createNode(trans, [], ['type', 'value'])
+    let builder;
+
+    if(builder = trans_type1[type]){
+        if(value instanceof Array 
+            && value.length == 3 
+            && value .every(e => typeof(e) == 'number')) return new builder(value)
+
+        throw new Error(`Error parsing 'extra-trans': Invalid value for '${type}' type. Expected an array of 3 numbers.`)
+    }else if(builder = trans_type2[type]){
+        if(typeof(value) != 'number')
+            throw new Error(
+                `Error parsing 'extra-trans': Invalid value for '${type}' type`
+                )
+        return new builder(value)
+    }else{
+        throw new Error(`Error parsing 'extra-trans': Invalid transformation type:'${type}'`)
+    }
+}
+
 function fillNodeInfo(node, info){
     let extTrans = info['extra-trans']
     if(extTrans){
@@ -339,34 +374,50 @@ function fillNodeInfo(node, info){
                     node[k] = trans
             }else
                 throw Error(
-                    `Invalid ${k}. Expected an array of 3 numbers.`
+                    `Invalid '${k}'. Expected an array of 3 numbers.`
                 )
 
         }
     }
+    for(let [key, attr] of [
+        ['rotation-x', 'rotationX'], 
+        ['rotation-y', 'rotationY'], 
+        ['rotation-z', 'rotationZ'],
+    ]){
+        let trans = info[key]
+        if(trans){
+            if(typeof(trans) != 'number')
+                throw new Error(`Expected number as '${key}' but found '${typeof(trans)}'`)
+            node[attr] = trans
+        }
+    }
+
+    return node
 }
 
-function parseNode(node, primitives){
+function parseNode(info, primitives){
     const type = node.type
     if(type == LEAF){
-        const node = createNode(node, [optional_keys, leaf_keys])
-        const {name, primitive, color} = node
+        const node = createNode(info, optional_keys, leaf_keys)
+        let  {name, primitive, color} = node
+
+        if(!name) name = ''
 
         if(typeof(name) != 'string')
             throw new Error(`Expected a string but found a ${typeof(name)}`)
 
-        if(!(primitive in primitives))
-            throw new Error(`Invalid primitive ${primitive}`)
+        if(!primitives.includes(primitive))
+            throw new Error(`Invalid primitive:'${primitive}'`)
 
         if(!(color in colors))
-            throw new Error(`Invalid color ${primitive}`)
+            throw new Error(`Invalid color:'${color}'`)
 
         const leafNode = new LeafNode(name, primitive, color)
 
         return fillNodeInfo(leafNode, node)
     }else if(type == REGULAR){
         // ...
-        const node = createNode(node, [optional_keys, regular_keys])
+        const node = createNode(info, optional_keys, regular_keys)
     }else{
         throw new Error(
             `Unexpected node type in ${txt}\nNode type should be either '${REGULAR}' or '${LEAF}'.`
@@ -422,3 +473,16 @@ export {
     Node
 }
 
+/*
+const node = {
+    type: 'leaf',
+    primitive: 'cube',
+    color: 'grey',
+    'extra-trans': [
+        {type: 'scale', value: [1, 2, 3]}
+    ]
+}
+
+const result = parseNode(node, ['cube', 'cylinder'])
+console.log(result.modelMatrix)
+*/
