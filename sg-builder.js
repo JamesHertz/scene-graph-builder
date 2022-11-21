@@ -335,6 +335,7 @@ const trans_type2 = {
 
 // TODO: think about the txt ....
 // TODO: refactor the Error parsing 'extra-trans' ....
+// TODO: functions for each of the types: like validateRotation, validateTransOrScale
 function parseTrans(trans){
     const {type, value} = createNode(trans, [], ['type', 'value'])
     let builder;
