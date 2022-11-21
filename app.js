@@ -1,5 +1,5 @@
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
-import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult} from "../libs/MV.js";
+import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, inverse} from "../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale} from "../libs/stack.js";
 
 import * as SPHERE from '../libs/objects/sphere.js'
@@ -69,14 +69,19 @@ const basic_cameras = {
 const heli_consts = {
     MAX_HEIGHT: 20,
     MIN_HEIGHT: 2.25,
-    MAX_SPEED: -360,
+    MAX_SPEED: -3.6,
 }
 
 // helicopter infos
+// clea up this thing later
 let h_height = heli_consts.MIN_HEIGHT
 let h_angle = 0
 let h_forward_speed = 0
 let h_slope_angle = 0
+
+
+const EYE = vec4(-5, 0, 0, 0), AT = vec4(0, 0, 0, 0)
+
 
 /*
 
@@ -123,6 +128,18 @@ function setupControllers(){
     gui.domElement.addEventListener('keyup', e => e.stopPropagation())
 }
 
+
+function getFollowMatrix(heliModel){
+    const eye = vec3(mult(heliModel, EYE))
+    const at =  vec3(mult(heliModel, AT))
+    //eye[2] = at[2]
+
+    const result = lookAt(eye, at, [0, 1, 0])
+    result.follow = true
+    console.log({eye, at})
+    return result
+}
+
 function setup(shaders)
 {
     // some constants
@@ -140,6 +157,8 @@ function setup(shaders)
     let Mview = getAxonoMatrix()
 
     let mProjection;
+    let heliModelView;
+    let heliModel;
 
     
 
@@ -179,6 +198,7 @@ function setup(shaders)
                 break
             case '5':
                 //Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
+                Mview = getFollowMatrix(heliModel)
                 break
 
             case 'w':
@@ -380,6 +400,8 @@ function setup(shaders)
             multTranslation([0, h_height, 20])
             multRotationZ(h_slope_angle)
             multRotationY(180)
+
+            heliModelView = modelView()
             helicopter()
         popMatrix()
             floor()
@@ -429,18 +451,25 @@ function setup(shaders)
         // think about this later?
         // would it better to use acceleration?
         if(pressed_keys.ArrowLeft){
-            h_forward_speed = Math.max(h_forward_speed - 10,  MAX_SPEED)
+            h_forward_speed = Math.max(h_forward_speed - 0.1,  MAX_SPEED)
         }
 
         if(h_forward_speed){
-            h_forward_speed = Math.min(0, h_forward_speed + 2.5)
-            console.log(h_forward_speed)
+            h_forward_speed = Math.min(0, h_forward_speed + 0.025)
+            h_angle += h_forward_speed 
         }
 
-        h_angle += h_forward_speed / 100
         h_slope_angle = h_forward_speed/MAX_SPEED * 30
         // lookAt(eye, at, up)
         // if it is an axono matrix just recalculate it :)
+
+        // some fun stuffs
+        if(heliModelView)
+            heliModel = mult(rotateY(h_forward_speed), mult( inverse(Mview), heliModelView))
+        
+        // calc
+
+        if(Mview.follow) Mview = getFollowMatrix(heliModel)
         if(Mview.axono) Mview = getAxonoMatrix()
         loadMatrix(Mview)
         drawScene() // this mess will be fixed :)
