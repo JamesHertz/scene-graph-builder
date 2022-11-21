@@ -396,7 +396,7 @@ function fillNodeInfo(node, info){
 }
 
 function parseNode(info, primitives){
-    const type = node.type
+    const {type} = info
     if(type == LEAF){
         const node = createNode(info, optional_keys, leaf_keys)
         let  {name, primitive, color} = node
