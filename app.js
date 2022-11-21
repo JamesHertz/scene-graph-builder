@@ -64,8 +64,6 @@ const basic_cameras = {
     right: lookAt([100, 0, 0], [0, 0, 0], [0,1,0]),
 }
 
-
-
 const heli_consts = {
     MAX_HEIGHT: 20,
     MIN_HEIGHT: 2.25,
@@ -79,8 +77,7 @@ let h_angle = 0
 let h_forward_speed = 0
 let h_slope_angle = 0
 
-
-const EYE = vec4(-5, 0, 0, 0), AT = vec4(0, 0, 0, 0)
+const EYE = vec4(-5, 0, 0, 1), AT = vec4(0, 0, 0, 1)
 
 
 /*
@@ -132,11 +129,9 @@ function setupControllers(){
 function getFollowMatrix(heliModel){
     const eye = vec3(mult(heliModel, EYE))
     const at =  vec3(mult(heliModel, AT))
-    //eye[2] = at[2]
 
     const result = lookAt(eye, at, [0, 1, 0])
     result.follow = true
-    console.log({eye, at})
     return result
 }
 
@@ -169,7 +164,7 @@ function setup(shaders)
     resize_canvas()
     window.addEventListener("resize", resize_canvas);
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.enable(gl.DEPTH_TEST);   // Enables Z-buffer depth test
     
     window.requestAnimationFrame(render);
@@ -228,8 +223,9 @@ function setup(shaders)
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
+        const value = 30
         aspect = canvas.width / canvas.height;
-        mProjection = ortho(-30 * aspect, 30 * aspect, -30, 30, 1, 200) 
+        mProjection = ortho(-value * aspect, value * aspect, -value, value, 1, 200) 
         gl.viewport(0,0,canvas.width, canvas.height);
     }
 
