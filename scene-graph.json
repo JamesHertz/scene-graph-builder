@@ -38,16 +38,14 @@
         ]
     },
 
-    "nodes": [
-        {
-            "name": "body",
+    "base-nodes": {
+        "body": {
             "type": "leaf",
             "scale": [5, 3, 3],
             "primitive": "sphere"
         },
 
-        {
-            "name": "tail",
+        "tail": {
             "type": "regular",
             "children": [
                 "front-tail",
@@ -57,6 +55,7 @@
                     "children": "back-tail"
                 }, 
                 {
+                    "type": "regular",
                     "translation": [-2.25, 0.4, 0.1],
                     "rotation-z": 0,
                     "children": "tail-helices"
@@ -64,9 +63,9 @@
             ]
 
         },
-        {
+
+        "bearpaws": {
             "type": "regular",
-            "name": "bearpaws",
             "children": [
                 {
                     "type": "regular",
@@ -85,23 +84,21 @@
             ]
         },
 
-        {
-            "name": "front-tail",
+        "front-tail": {
             "type": "leaf",
             "color": "red",
-            "primitive": [5, 0.8, 0.35]
+            "scale": [5, 0.8, 0.35],
+            "primitive": "sphere"
         },
 
-        {
-            "name": "back-tail",
+        "back-tail": {
             "type": "leaf",
             "rotation-z": 15,
             "scale": [0.6, 1, 0.2],
             "primitive": "sphere"
         },
 
-        {
-            "name": "single-bear-paw",
+        "single-bear-paw": {
             "type": "regular",
             "children": [
                 {
@@ -132,20 +129,18 @@
 
         },
 
-        {
-            "name": "bp-support",
+        "bp-support": {
             "type": "leaf",
             "scale": [0.2, 1, 0.2],
             "primitive": "cube",
             "color": "grey"
         },
 
-        {
-            "name": "helice",
+        "helice": {
             "type": "leaf",
             "scale": [4, 0.4, 0.4],
             "primitive": "sphere"
         }
-    ] 
+    } 
 
 }

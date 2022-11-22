@@ -508,12 +508,22 @@ function parseRegularNode(parseCtx, info){
     return regularNode
 }
 
+function checkOrderProblem(parseCtx, info){
+    const {base_nodes, nodes} = parseCtx
+    let node = null
+    if(nodes && base_nodes[info] !== null && (node = nodes[info])){
+        if(!node.name) node.name = info // if node doesn't have a name
+        base_nodes[info] = null 
+        base_nodes[info] = parseNode(parseCtx, node)
+    }
+    return node
+}
 
 function parseNode(parseCtx, info){
     const {base_nodes, primitives} = parseCtx
 
     if(typeof(info) === 'string'){
-        const node = base_nodes[info]
+        const node = base_nodes[info] || checkOrderProblem(parseCtx, info)
         if(!node) throw new Error(`Base node '${info}' doesn't exit.`)
         return node
     }else if(typeof(info) !== 'object')
@@ -533,8 +543,10 @@ function parseNode(parseCtx, info){
            throw prefixErrorMessage('Error parsing regular node: ', err) 
         }
     }else{
+        // think for a better solution :)
+        const txt = JSON.stringify(info)
         throw new Error(
-            `Invalid node type '${type}'\n It should've been either '${REGULAR}' or '${LEAF}'.`
+            `Invalid node type in '${txt}'\n It should've been either '${REGULAR}' or '${LEAF}'.`
         )
     }
 
@@ -552,7 +564,9 @@ function parseScene(scene_desc, primitives){
     const nodes = scene['base-nodes']
     const base_nodes = {}
 
-    const parseCtx = {primitives, base_nodes}
+    // idea to solve the problem of order
+    // in parseNode() sends nodes are one of the args
+    const parseCtx = {primitives, base_nodes, nodes}
     if(nodes){
         if(typeof(nodes) != 'object')
             throw new Error('Invalid base-nodes. It should be a dictionary of nodes.')
@@ -562,10 +576,15 @@ function parseScene(scene_desc, primitives){
             const {name} = node_desc
 
             if(name != undefined && name != key)
-                throw new Error(`Base nodes shouldn't be named.\nTheir keys are taken as their keys.`)
+                throw new Error(
+                    `Base node name inconsistence. It's named as '${name}' while it's key is '${key}'`
+                    )
 
-            node_desc.name = key
-            base_nodes[key] = parseNode(parseCtx, node_desc)
+                if(!base_nodes[key]){
+                    node_desc.name = key
+                    base_nodes[key] = parseNode(parseCtx, node_desc)
+                }
+
         }
     }
 
@@ -650,7 +669,6 @@ const parseCtx = {
 const result = parseNode(parseCtx, node)
 console.log(result.modelMatrix)
 console.log(result.children)
-*/
 const sg_desc = {
     root: {
         type: 'regular',
@@ -658,10 +676,18 @@ const sg_desc = {
     },
     'base-nodes': {
         box: {
-            type: 'leaf',
+            type: 'regular',
             scale: [2, 2, 2],
-            color: [0, 0.5, 0],
+            children: ['large-box']
+        },
+        
+        'large-box': {
+            type: 'leaf',
             primitive: 'cube'
         }
+
     }
 }
+const sg = new SceneGraph(sg_desc, ['cube'])
+*/
+
