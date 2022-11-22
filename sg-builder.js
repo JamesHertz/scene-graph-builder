@@ -281,7 +281,8 @@ const optional_keys= [
 ]
 
 // required keys for leaf and regular nodes respectively
-const leaf_keys = ['primitive', 'color']
+const leaf_optionals = [...optional_keys, 'color']
+const leaf_keys = ['primitive']
 const regular_keys = ['children']
 
 const colors = {
@@ -289,7 +290,9 @@ const colors = {
     yellow: vec3(1, 1, 0),
     blue: vec3(0, 0, 1),
     grey: vec3(0.5, 0.5, 0.5),
-    green: vec3(0, 1, 0)
+    green: vec3(0, 1, 0),
+    white: vec3(1, 1, 1),
+    black: vec3(0, 0, 0)
 }
 
 /**
@@ -301,21 +304,18 @@ const colors = {
 
 function createNode(node, optKeys, reqkeys){
 
-    // think of a better way to reporting the errors ..
-    let txt = JSON.stringify(node)
-
     const obj = {}
     const allkeys = [...optKeys, ...reqkeys]
 
     for(let k in node){
         if(!allkeys.includes(k))
-            throw new Error(`Unexpected key '${k}' in node ${txt}`)
+            throw new Error(`Unexpected key '${k}'.`)
         obj[k] = node[k]
     }
 
     for(let k of reqkeys){
         if(!(k in obj))
-            throw new Error(`Key '${k}' not found in ${txt}`)
+            throw new Error(`Missing key '${k}'.`)
     }
 
     return obj
@@ -333,9 +333,13 @@ const trans_type2 = {
     'rotation-z': RotationZ
 }
 
+const DEFAULT_COLOR = colors.white
+
 // TODO: think about the txt ....
 // TODO: refactor the Error parsing 'extra-trans' ....
 // TODO: functions for each of the types: like validateRotation, validateTransOrScale
+// TODO: take out colors as required X
+// TODO: unicity test
 function parseTrans(trans){
     const {type, value} = createNode(trans, [], ['type', 'value'])
     let builder;
@@ -349,7 +353,7 @@ function parseTrans(trans){
     }else if(builder = trans_type2[type]){
         if(typeof(value) != 'number')
             throw new Error(
-                `Error parsing 'extra-trans': Invalid value for '${type}' type`
+                `Error parsing 'extra-trans': Invalid value for '${type}' type. Expected a number.`
                 )
         return new builder(value)
     }else{
@@ -368,7 +372,7 @@ function fillNodeInfo(node, info){
 
     for(let k of ['scale', 'translation']){
         let trans = info[k]
-        if(trans){
+        if(trans !== undefined){
             if(trans instanceof Array 
                 && trans.length == 3 
                 && trans.every(e => typeof(e) == 'number')){
@@ -386,7 +390,7 @@ function fillNodeInfo(node, info){
         ['rotation-z', 'rotationZ'],
     ]){
         let trans = info[key]
-        if(trans){
+        if(trans !== undefined){
             if(typeof(trans) != 'number')
                 throw new Error(`Expected number as '${key}' but found '${typeof(trans)}'`)
             node[attr] = trans
@@ -396,32 +400,90 @@ function fillNodeInfo(node, info){
     return node
 }
 
-function parseNode(info, primitives){
+function parseName(name){
+    if(typeof(name) === 'string' || name == undefined)
+        return name || null
+    else
+        throw new Error(`Invalid node's name: ${name}. Expected a string or nothing.`)
+}
+
+function parseLeafNode(info, primitives){
+    const node = createNode(info, leaf_optionals, leaf_keys)
+    let  {name, primitive, color} = node
+
+    name = parseName(name)
+
+    if(!primitives.includes(primitive))
+        throw new Error(`Invalid primitive:'${primitive}'`)
+
+    // Future plans: accept an array of 3 numbers as well
+    if(color === undefined) color = DEFAULT_COLOR
+    else if(!(color in colors))
+        throw new Error(`Invalid color:'${color}'`)
+
+    const leafNode = new LeafNode(name, primitive, color)
+
+    return fillNodeInfo(leafNode, node)
+
+}
+
+function parseRegularNode(parseCtx, info){
+    const {nodes} = parseCtx
+
+    function parseChild(child){
+        if(typeof(child) === 'string'){
+            const node = nodes.find( c => child === c.name)
+            if(!node) throw new Error(`Node '${child}' doesn't exit.`)
+            return node 
+        }else if(typeof(child) === 'object'){
+            return parseNode(parseCtx, child)
+        }else{
+            throw Error(`Invalid node's child. It should be either a <node_name> or a <node>`)
+        }
+    }
+
+    const node = createNode(info, optional_keys, regular_keys)
+
+    let name = parseName(node.name)
+    const regularNode = fillNodeInfo(new RegularNode(name), node) 
+
+    const {children} = node
+
+    if (children instanceof Array){
+        for(let child of children){
+            regularNode.addNode(parseChild(child))
+        }
+    }else {
+        regularNode.addNode(parseChild(children))
+    }
+
+    return regularNode
+}
+
+
+function parseNode(parseCtx, info){
+    if(typeof(info) != 'object') 
+        throw new Error(`Expected an object as node but found ${typeof(info)}`)
+
     const {type} = info
+    const {primitives} = parseCtx
     if(type == LEAF){
-        const node = createNode(info, optional_keys, leaf_keys)
-        let  {name, primitive, color} = node
-
-        if(!name) name = ''
-
-        if(typeof(name) != 'string')
-            throw new Error(`Expected a string but found a ${typeof(name)}`)
-
-        if(!primitives.includes(primitive))
-            throw new Error(`Invalid primitive:'${primitive}'`)
-
-        if(!(color in colors))
-            throw new Error(`Invalid color:'${color}'`)
-
-        const leafNode = new LeafNode(name, primitive, color)
-
-        return fillNodeInfo(leafNode, node)
+        // try catch
+        try{
+            return parseLeafNode(info, primitives)
+        }catch(err){
+           throw new Error('Error parsing leaf node: '  + err.message) 
+        }
     }else if(type == REGULAR){
-        // ...
-        const node = createNode(info, optional_keys, regular_keys)
+        // try catch
+        try{
+            return parseRegularNode(parseCtx, info)
+        }catch(err){
+           throw new Error('Error parsing regular node: '  + err.message) 
+        }
     }else{
         throw new Error(
-            `Unexpected node type in ${txt}\nNode type should be either '${REGULAR}' or '${LEAF}'.`
+            `Invalid node type '${type}'\n It should've been either '${REGULAR}' or '${LEAF}'.`
         )
     }
 
@@ -430,17 +492,33 @@ function parseNode(info, primitives){
 function parseScene(scene_desc, primitives){
     if(typeof(scene_desc) != 'object')
         throw new Error('Invalid scene_desc')
+    let scene;
 
-    let scene = createNode(scene_desc, ['nodes'], ['root']) 
+    // missing some type check
+    try{
+        scene = createNode(scene_desc, ['nodes'], ['root']) 
+    }catch(err){
+        throw new Error('Error parsing scene desc: ' + err.message)
+    }
 
-    // check if nodes is an array
+    const nodes = []
     if(scene.nodes){
-        // do something fun :)
+        if(!(scene.nodes instanceof Array))
+            throw new Error('Scene nodes should be an array of nodes.')
+
+        for(let nodeInfo of scene.nodes){
+            const node = parseNode({primitives, nodes}, nodeInfo)
+            // TODO: test if node has name
+            // TODO: test unicity
+
+            nodes.push(node)
+        }
     }
 
     // check if root is an object
-    scene.root = parseNode(scene.root)
-    return scene
+    const root = parseNode({primitives, nodes}, scene.root)
+
+    return {root, nodes}
 }
 
 class SceneGraph{
@@ -474,16 +552,25 @@ export {
     Node
 }
 
-/*
 const node = {
-    type: 'leaf',
-    primitive: 'cube',
-    color: 'grey',
+    type: 'regular',
+    translation: [2, 2, 2],
     'extra-trans': [
-        {type: 'scale', value: [1, 2, 3]}
-    ]
+        {type: 'translation', value: [1, 1, 1]}
+    ],
+    children: [{
+        type: 'leaf',
+        primitive: 'cube'
+    }, 'floor']
 }
 
-const result = parseNode(node, ['cube', 'cylinder'])
+const leaf = new LeafNode('floor', 'cube', vec3(1, 1, 1))
+
+const parseCtx = {
+    primitives: ['cube', 'cylinder'],
+    nodes: [leaf] 
+}
+
+const result = parseNode(parseCtx, node)
 console.log(result.modelMatrix)
-*/
+console.log(result.children)
