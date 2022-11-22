@@ -227,27 +227,47 @@ class RegularNode extends Node{
     // fill later
     constructor(name){
         super(name)
-        this.children = []
+        this._children = []
         this.c_dict = {}
     }
 
     // adds a new node to this node 
-    addNode(node){
+    addChild(node){
         if(node.name in this.c_dict)
-            throw new Error("A parent shouldn't two child with the same name")
+            throw new Error(`Regular node already has child node named '${node.name}'`)
 
         if(node.name)
             this.c_dict[node.name] = node
 
-        this.children.push(node)
+        this._children.push(node)
     }
 
-    // TODO: think if this thing does actually make sense
     // retuns an imediate child with name "name"
-    getNode(name){
+    getChild(name){
         if(name in this.c_dict)
             return this.c_dict[name]
         return null
+    }
+
+    removeChild(child){
+        let ref;
+
+        if(typeof(child) == 'string')
+            ref = this.c_dict[child]
+        else // assuming it's an object
+            ref = this._children.find( c => child == c)
+        
+        if(ref){
+            this._children = this._children.filter(c => c != ref)
+            delete this.c_dict[ref.name]
+            return ref
+        }
+        
+        return null
+    }
+
+    get children(){
+        return this._children
     }
 
     /**
@@ -259,7 +279,7 @@ class RegularNode extends Node{
         const lastIdx = stack.length - 1
         stack[lastIdx] = mult(stack[lastIdx], this.modelMatrix)
 
-        for(let child of this.children){
+        for(let child of this._children){
             const aux = stack.pop()
             stack.push(aux, aux)
                 child.draw(stack, draw)
@@ -268,6 +288,11 @@ class RegularNode extends Node{
     }
 
 }
+
+
+// TODO: have constants for each one of the attributes
+
+// parsing functions
 
 // node type
 const LEAF = 'leaf', REGULAR = 'regular'
@@ -299,6 +324,10 @@ const colors = {
     black: vec3(0, 0, 0)
 }
 
+function prefixErrorMessage(prefix, error){
+    error.message = prefix + error.message
+    return error
+}
 /**
  * 
  * @param {Object} node 
@@ -306,7 +335,10 @@ const colors = {
  * @param {Array<String>} reqkeys  required keys the object should have
  */
 
+// think about the error code
 function createNode(node, optKeys, reqkeys){
+    if(typeof(node) != 'object')
+        throw new Error(`Expected an object but found '${typeof(node)}'`)
 
     const obj = {}
     const allkeys = [...optKeys, ...reqkeys]
@@ -319,7 +351,7 @@ function createNode(node, optKeys, reqkeys){
 
     for(let k of reqkeys){
         if(!(k in obj))
-            throw new Error(`Missing key '${k}'.`)
+            throw new Error(`Key '${k}' is missing.`)
     }
 
     return obj
@@ -339,54 +371,76 @@ const trans_type2 = {
 
 const DEFAULT_COLOR = colors.white
 
-// TODO: think about the txt ....
-// TODO: refactor the Error parsing 'extra-trans' ....
-// TODO: functions for each of the types: like validateRotation, validateTransOrScale
-// TODO: take out colors as required X
-// TODO: unicity test
+function getTransOrScale(type, trans){
+    if(trans instanceof Array 
+            && trans.length == 3 
+            && trans.every(e => typeof(e) == 'number')) return trans
+    throw new Error(`Invalid value for ${type}. Expected an array of 3 numbers.`)
+}
+
+function getRotation(key, value){
+    if(typeof(value) != 'number')
+         throw new Error(
+                ` Invalid value for '${key}' type. Expected a number.`
+                )
+    return value
+}
+
+
+function parseColor(color){
+    if(color === undefined) return DEFAULT_COLOR
+    else if(color in colors) return colors[color]
+    else if(color instanceof Array 
+            && color.length == 3 
+            && color.every(e => typeof(e) == 'number')){
+                return color
+    }else
+        throw new Error(`Invalid color:'${color}'`)
+}
+
+
+
+// TODO: think about the txt ??
+// TODO: refactor the Error parsing 'extra-trans' X
 function parseTrans(trans){
     const {type, value} = createNode(trans, [], ['type', 'value'])
     let builder;
 
-    if(builder = trans_type1[type]){
-        if(value instanceof Array 
-            && value.length == 3 
-            && value .every(e => typeof(e) == 'number')) return new builder(value)
-
-        throw new Error(`Error parsing 'extra-trans': Invalid value for '${type}' type. Expected an array of 3 numbers.`)
-    }else if(builder = trans_type2[type]){
-        if(typeof(value) != 'number')
-            throw new Error(
-                `Error parsing 'extra-trans': Invalid value for '${type}' type. Expected a number.`
-                )
-        return new builder(value)
-    }else{
-        throw new Error(`Error parsing 'extra-trans': Invalid transformation type:'${type}'`)
+    if(builder = trans_type1[type])
+        return new builder(getTransOrScale(type, value))
+    else if(builder = trans_type2[type])
+        return new builder(getRotation(type, value))
+    else{
+        throw new Error(`Invalid transformation type:'${type}'`)
     }
 }
 
 function fillNodeInfo(node, info){
-    let extTrans = info['extra-trans']
-    if(extTrans){
-        if(!(extTrans instanceof Array))
-            throw new Error(`Expected an array as 'extra-trans' but found ${trans.constructor}`)
-        for(let t of extTrans)
-            node.addTransformation(parseTrans(t))
-    }
 
+    try{
+
+        let extTrans = info['extra-trans']
+        if(extTrans !== undefined){
+            if(extTrans instanceof Array){
+                for(let t of extTrans)
+                    node.addTransformation(parseTrans(t))
+            }else if(typeof(extTrans) == 'object'){
+                    node.addTransformation(parseTrans(extTrans))
+            }else
+                throw new Error(
+                    `Expected an array or an trans_object as 'extra-trans' but found ${typeof(extTrans)}`
+                    )
+        }
+
+    }catch(err){
+        throw prefixErrorMessage("Error parsing 'extra-trans': ", err)
+    }
+ 
     for(let k of ['scale', 'translation']){
         let trans = info[k]
-        if(trans !== undefined){
-            if(trans instanceof Array 
-                && trans.length == 3 
-                && trans.every(e => typeof(e) == 'number')){
-                    node[k] = trans
-            }else
-                throw Error(
-                    `Invalid '${k}'. Expected an array of 3 numbers.`
-                )
-
-        }
+        if(trans !== undefined)
+            node[k] = getTransOrScale(k, trans)
+        
     }
     for(let [key, attr] of [
         ['rotation-x', 'rotationX'], 
@@ -394,11 +448,8 @@ function fillNodeInfo(node, info){
         ['rotation-z', 'rotationZ'],
     ]){
         let trans = info[key]
-        if(trans !== undefined){
-            if(typeof(trans) != 'number')
-                throw new Error(`Expected number as '${key}' but found '${typeof(trans)}'`)
-            node[attr] = trans
-        }
+        if(trans !== undefined)
+            node[attr] = getRotation(key, trans)
     }
 
     return node
@@ -421,10 +472,7 @@ function parseLeafNode(info, primitives){
         throw new Error(`Invalid primitive:'${primitive}'`)
 
     // Future plans: accept an array of 3 numbers as well
-    if(color === undefined) color = DEFAULT_COLOR
-    else if(!(color in colors))
-        throw new Error(`Invalid color:'${color}'`)
-
+    color = parseColor(color)
     const leafNode = new LeafNode(name, primitive, color)
 
     return fillNodeInfo(leafNode, node)
@@ -432,17 +480,12 @@ function parseLeafNode(info, primitives){
 }
 
 function parseRegularNode(parseCtx, info){
-    const {base_nodes} = parseCtx
 
     function parseChild(child){
-        if(typeof(child) === 'string'){
-            const node = base_nodes[child]
-            if(!node) throw new Error(`Node '${child}' doesn't exit.`)
-            return node 
-        }else if(typeof(child) === 'object'){
+        try{
             return parseNode(parseCtx, child)
-        }else{
-            throw new Error('Invalid child. It should be either a <node_name> or a <node>')
+        }catch(err){
+            throw prefixErrorMessage('Error parsing children: ', err)
         }
     }
 
@@ -456,10 +499,10 @@ function parseRegularNode(parseCtx, info){
     if (children instanceof Array){
 
         for(let child of children)
-             regularNode.addNode(parseChild(child))
+             regularNode.addChild(parseChild(child))
         
     }else {
-        regularNode.addNode(parseChild(children))
+        regularNode.addChild(parseChild(children))
     }
 
     return regularNode
@@ -467,21 +510,27 @@ function parseRegularNode(parseCtx, info){
 
 
 function parseNode(parseCtx, info){
-    if(typeof(info) != 'object') 
-        throw new Error(`Expected an object as node but found ${typeof(info)}`)
+    const {base_nodes, primitives} = parseCtx
+
+    if(typeof(info) === 'string'){
+        const node = base_nodes[info]
+        if(!node) throw new Error(`Base node '${info}' doesn't exit.`)
+        return node
+    }else if(typeof(info) !== 'object')
+        throw new Error(`Expected a object or a base-node name but found '${typeof(info)}'`)
 
     const {type} = info
     if(type == LEAF){
         try{
-            return parseLeafNode(info, parseCtx.primitives)
+            return parseLeafNode(info, primitives)
         }catch(err){
-           throw new Error('Error parsing leaf node: '  + err.message) 
+           throw prefixErrorMessage('Error parsing leaf node: ', err) 
         }
     }else if(type == REGULAR){
         try{
             return parseRegularNode(parseCtx, info)
         }catch(err){
-           throw new Error('Error parsing regular node: '  + err.message) 
+           throw prefixErrorMessage('Error parsing regular node: ', err) 
         }
     }else{
         throw new Error(
@@ -492,41 +541,40 @@ function parseNode(parseCtx, info){
 }
 
 function parseScene(scene_desc, primitives){
-    if(typeof(scene_desc) != 'object')
-        throw new Error('Invalid scene_desc')
     let scene;
 
-    // missing some type check
     try{
-        scene = createNode(scene_desc, ['nodes'], ['root']) 
+        scene = createNode(scene_desc, ['base-nodes'], ['root']) 
     }catch(err){
-        throw new Error('Error parsing scene desc: ' + err.message)
+        throw prefixErrorMessage('Error parsing scene_desc: ', err)
     }
 
-    // check the scene.node type ....
-    const base_nodes = scene['base-nodes']
-    const nodes = {}
-    if(base_nodes){
-        if(typeof(scene.nodes) != 'object')
-            throw new Error('Scene nodes should be an dictionary of nodes.')
+    const nodes = scene['base-nodes']
+    const base_nodes = {}
 
-        for(let key in base_nodes){
-            const node_desc = base_nodes[key]
+    const parseCtx = {primitives, base_nodes}
+    if(nodes){
+        if(typeof(nodes) != 'object')
+            throw new Error('Invalid base-nodes. It should be a dictionary of nodes.')
+
+        for(let key in nodes){
+            const node_desc = nodes[key]
             const {name} = node_desc
-            const parseCtx = {primitives, nodes}
 
             if(name != undefined && name != key)
                 throw new Error(`Base nodes shouldn't be named.\nTheir keys are taken as their keys.`)
 
             node_desc.name = key
-            nodes[key] = parseNode(parseCtx, node_desc)
+            base_nodes[key] = parseNode(parseCtx, node_desc)
         }
     }
 
-    // check if root is an object
-    const root = parseNode({primitives, nodes}, scene.root)
-
-    return {root, nodes}
+    try{
+        const root = parseNode(parseCtx, scene.root)
+        return {root, base_nodes}
+    }catch(err){
+        throw prefixErrorMessage('Error parsing root: ', err)
+    }
 }
 
 class SceneGraph{
@@ -549,8 +597,8 @@ class SceneGraph{
     }
 
     // think about this later
-    getNode(name){
-        return this.nodes.find( n => n.name == name)
+    getBaseNode(name){
+        return this.base_nodes[name]
     }
 
     findNode(path){
@@ -558,9 +606,16 @@ class SceneGraph{
     }
 
     createNode(node_desc){
+        //if(typeof(node_desc) == 'string')
+        //    node_desc = {type:'regular', children: node_desc}
         return parseNode(this.parseCtx, node_desc)
     }
 
+    /**
+     * 
+     * @param {(primitive, modelView, color) => void} draw 
+     * @param {mat4} Mview 
+     */
     drawScene(draw, Mview){
         const stack = [Mview] 
         this.root.draw(stack, draw)
@@ -569,17 +624,17 @@ class SceneGraph{
 } 
 
 export {
-    SceneGraph,
-    Node
+    SceneGraph
 }
 
+/*
 const node = {
     type: 'regular',
     translation: [2, 2, 2],
     'extra-trans': [
-        {type: 'translation', value: [1, 1, 1]}
+        {type: 'translation', value: [1, 1, 2]}
     ],
-    children: [{
+    children:  [{
         type: 'leaf',
         primitive: 'cube'
     }, 'floor']
@@ -589,9 +644,24 @@ const floor = new LeafNode('floor', 'cube', vec3(1, 1, 1))
 
 const parseCtx = {
     primitives: ['cube', 'cylinder'],
-    nodes: {floor} 
+    base_nodes: {floor} 
 }
 
 const result = parseNode(parseCtx, node)
 console.log(result.modelMatrix)
 console.log(result.children)
+*/
+const sg_desc = {
+    root: {
+        type: 'regular',
+        children: 'box'
+    },
+    'base-nodes': {
+        box: {
+            type: 'leaf',
+            scale: [2, 2, 2],
+            color: [0, 0.5, 0],
+            primitive: 'cube'
+        }
+    }
+}
