@@ -38,7 +38,7 @@
         ]
     },
 
-    "regulars": [
+    "nodes": [
         {
             "name": "body",
             "type": "leaf",

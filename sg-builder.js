@@ -233,8 +233,12 @@ class RegularNode extends Node{
 
     // adds a new node to this node 
     addNode(node){
+        if(node.name in this.c_dict)
+            throw new Error("A parent shouldn't two child with the same name")
+
         if(node.name)
-            this.c_dict[this.name] = node
+            this.c_dict[node.name] = node
+
         this.children.push(node)
     }
 
@@ -428,17 +432,17 @@ function parseLeafNode(info, primitives){
 }
 
 function parseRegularNode(parseCtx, info){
-    const {nodes} = parseCtx
+    const {base_nodes} = parseCtx
 
     function parseChild(child){
         if(typeof(child) === 'string'){
-            const node = nodes.find( c => child === c.name)
+            const node = base_nodes[child]
             if(!node) throw new Error(`Node '${child}' doesn't exit.`)
             return node 
         }else if(typeof(child) === 'object'){
             return parseNode(parseCtx, child)
         }else{
-            throw Error(`Invalid node's child. It should be either a <node_name> or a <node>`)
+            throw new Error('Invalid child. It should be either a <node_name> or a <node>')
         }
     }
 
@@ -450,9 +454,10 @@ function parseRegularNode(parseCtx, info){
     const {children} = node
 
     if (children instanceof Array){
-        for(let child of children){
-            regularNode.addNode(parseChild(child))
-        }
+
+        for(let child of children)
+             regularNode.addNode(parseChild(child))
+        
     }else {
         regularNode.addNode(parseChild(children))
     }
@@ -466,16 +471,13 @@ function parseNode(parseCtx, info){
         throw new Error(`Expected an object as node but found ${typeof(info)}`)
 
     const {type} = info
-    const {primitives} = parseCtx
     if(type == LEAF){
-        // try catch
         try{
-            return parseLeafNode(info, primitives)
+            return parseLeafNode(info, parseCtx.primitives)
         }catch(err){
            throw new Error('Error parsing leaf node: '  + err.message) 
         }
     }else if(type == REGULAR){
-        // try catch
         try{
             return parseRegularNode(parseCtx, info)
         }catch(err){
@@ -501,17 +503,23 @@ function parseScene(scene_desc, primitives){
         throw new Error('Error parsing scene desc: ' + err.message)
     }
 
-    const nodes = []
-    if(scene.nodes){
-        if(!(scene.nodes instanceof Array))
-            throw new Error('Scene nodes should be an array of nodes.')
+    // check the scene.node type ....
+    const base_nodes = scene['base-nodes']
+    const nodes = {}
+    if(base_nodes){
+        if(typeof(scene.nodes) != 'object')
+            throw new Error('Scene nodes should be an dictionary of nodes.')
 
-        for(let nodeInfo of scene.nodes){
-            const node = parseNode({primitives, nodes}, nodeInfo)
-            // TODO: test if node has name
-            // TODO: test unicity
+        for(let key in base_nodes){
+            const node_desc = base_nodes[key]
+            const {name} = node_desc
+            const parseCtx = {primitives, nodes}
 
-            nodes.push(node)
+            if(name != undefined && name != key)
+                throw new Error(`Base nodes shouldn't be named.\nTheir keys are taken as their keys.`)
+
+            node_desc.name = key
+            nodes[key] = parseNode(parseCtx, node_desc)
         }
     }
 
@@ -530,14 +538,27 @@ class SceneGraph{
      */
     // think about this...
     constructor(scene_desc, primitives){
-        const {root, nodes} = parseScene(scene_desc, primitives)
-        this.root = root
-        this.nodes = nodes
+        const {root, base_nodes} = parseScene(scene_desc, primitives)
+        this._root = root
+        this.base_nodes = base_nodes
+        this.parseCtx = {base_nodes, primitives}
+    }
+
+    get root(){
+        return this._root
     }
 
     // think about this later
     getNode(name){
-        return this.root.getNode(name)
+        return this.nodes.find( n => n.name == name)
+    }
+
+    findNode(path){
+        // should go depening searching for the node
+    }
+
+    createNode(node_desc){
+        return parseNode(this.parseCtx, node_desc)
     }
 
     drawScene(draw, Mview){
@@ -564,11 +585,11 @@ const node = {
     }, 'floor']
 }
 
-const leaf = new LeafNode('floor', 'cube', vec3(1, 1, 1))
+const floor = new LeafNode('floor', 'cube', vec3(1, 1, 1))
 
 const parseCtx = {
     primitives: ['cube', 'cylinder'],
-    nodes: [leaf] 
+    nodes: {floor} 
 }
 
 const result = parseNode(parseCtx, node)
