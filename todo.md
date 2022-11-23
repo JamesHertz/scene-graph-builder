@@ -7,6 +7,6 @@
 - [X] complete the new module James's started
 - [X] make our scene beautier
 - [ ] change the name theta and gama to their respective symbols
-- [ ] change the ortho when using top camera or the follow one
-- [ ] change the functions getAxono to setAxono :)
+- [X] change the ortho when using top camera or the follow one
 - [ ] try to make the set Rotation more efficient
+- [ ] implement the box thing  
