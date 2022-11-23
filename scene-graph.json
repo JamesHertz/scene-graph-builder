@@ -30,8 +30,31 @@
                             ]
                         },
                         {
+                            "name": "upper-helices",
                             "translation": [0, 1.75, 0],
-                            "children": "upper-helices"
+                            "children": [
+                                {
+                                    "name": "upper-helice-junction",
+                                    "scale": [0.3, 0.6, 0.3],
+                                    "color": "yellow",
+                                    "primitive": "cylinder"
+                                }, 
+                                {
+                                    "translation": [-2, 0, 0],
+                                    "children": "normal-helice"
+                                },
+                                {
+                                    "translation": [1, 0, 1.75],
+                                    "rotation-y": 120,
+                                    "children": "normal-helice"
+                                },
+                                {
+                                    "translation": [1, 0, -1.75],
+                                    "rotation-y": 240,
+                                    "children": "normal-helice"
+                                }
+
+                            ]
                         },
                         {
                             "translation": [-4, 0.7, 0],
@@ -50,31 +73,6 @@
         ]
     },
     "base-nodes": {
-        "upper-helices": {
-            "children": [
-                {
-                    "name": "upper-helice-junction",
-                    "scale": [0.3, 0.6, 0.3],
-                    "color": "yellow",
-                    "primitive": "cylinder"
-                }, 
-                {
-                    "translation": [-2, 0, 0],
-                    "children": "normal-helice"
-                },
-                {
-                    "translation": [1, 0, 1.75],
-                    "rotation-y": 120,
-                    "children": "normal-helice"
-                },
-                {
-                    "translation": [1, 0, -1.75],
-                    "rotation-y": 240,
-                    "children": "normal-helice"
-                }
-
-            ]
-        },
         "tail": {
             "children": [
                 {

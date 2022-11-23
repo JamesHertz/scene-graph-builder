@@ -2,7 +2,7 @@ import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../lib
 import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, inverse, translate} from "../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale} from "../libs/stack.js";
 
-import { SceneGraph } from "./sg-builder.js";
+import { RotationY, SceneGraph, Translation } from "./sg-builder.js";
 import * as SPHERE from '../libs/objects/sphere.js'
 import * as CUBE from '../libs/objects/cube.js';
 import * as CYLINDER from '../libs/objects/cylinder.js'
@@ -54,12 +54,12 @@ const basic_cameras = {
 const MAX_SLOPE_ANGLE = 30,
       MAX_SPEED = -3.6,
       MAX_HEIGHT = 20,
-      MIN_HEIGHT = 2.25,
-      MIN_FLY_HEIGHT = Math.tan(Math.PI * MAX_SLOPE_ANGLE / 180)*2 + MIN_HEIGHT
+      MIN_HEIGHT = 0,
+      MIN_FLY_HEIGHT = Math.tan(Math.PI * MAX_SLOPE_ANGLE / 180)*2 
 
 
 // helicopter infos
-// clea up this thing later
+// clean up this thing later
 let h_height = MIN_HEIGHT
 let h_angle = 0
 let h_forward_speed = 0
@@ -124,6 +124,16 @@ function setup([shaders, scene_desc])
 {
 
     const scene_graph = new SceneGraph(scene_desc, Object.keys(primitives))
+    const helicopter = scene_graph.findNode('helicopter')
+    const tail_helices = scene_graph.findNode('helicopter/tail/tail-helices')
+    const upper_helices = scene_graph.findNode('helicopter/upper-helices')
+
+    const heli_height = helicopter.addTransformation(new Translation([0, 0, 0]))
+    const heli_forward = helicopter.addTransformation(new RotationY(0))
+    
+
+    console.log(tail_helices)
+    console.log(upper_helices)
 
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
@@ -137,8 +147,6 @@ function setup([shaders, scene_desc])
     let Mview = getAxonoMatrix()
 
     let mProjection;
-    let heliModelView;
-    let heliModel;
 
     
 
@@ -178,7 +186,7 @@ function setup([shaders, scene_desc])
                 break
             case '5':
                 //Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
-                Mview = getFollowMatrix(heliModel)
+                Mview = getFollowMatrix(helicopter.modelMatrix)
                 break
 
             case 'w':
@@ -200,8 +208,6 @@ function setup([shaders, scene_desc])
         if(e.key in pressed_keys)
             pressed_keys[e.key] = false
     })
-
-
 
     function resize_canvas(event)
     {
@@ -228,165 +234,6 @@ function setup([shaders, scene_desc])
 
         primitives[primitive].draw(gl, program, mode)
     }
-
-    function tiny_helice(){
-        multScale([1, 0.3, 0.15])
-        draw(SPHERE, colors.blue)
-    }
-
-    function helice(){
-        multScale([4, 0.4, 0.4])
-        draw(SPHERE, colors.blue)
-    }
-    
-    function upper_helice_junction(){
-        multScale([0.3, 0.6, 0.3])
-        draw(CYLINDER, colors.yellow)
-    }
-
-    function body(){
-        multScale([5, 3, 3])
-        draw(SPHERE)
-    }
-
-    function upper_helices(){
-        pushMatrix()  
-            upper_helice_junction()
-        popMatrix()
-        pushMatrix()  
-            multTranslation([-2, 0, 0])
-            helice()
-        popMatrix()
-        pushMatrix()  
-            multTranslation([1, 0, 1.75])
-            multRotationY(120)
-            helice()
-        popMatrix()
-            multTranslation([1, 0, -1.75])
-            multRotationY(240)
-            helice()
-    }
-    
-    function front_tail(){
-        multScale([5, 0.8, 0.35])
-        draw(SPHERE)
-    }
-
-    function tail_helice_junction(){
-        multRotationX(90)
-        multScale([0.2, 0.1, 0.2])
-        draw(CYLINDER, colors.yellow)
-    }
-
-    function tail_helices(){
-        pushMatrix()
-            tail_helice_junction()
-        popMatrix()
-        pushMatrix()
-            multTranslation([0.45, 0, 0])
-            tiny_helice()
-        popMatrix()
-        pushMatrix()
-            multTranslation([-0.45, 0, 0])
-            tiny_helice()
-        popMatrix()
-    }
-
-    function back_tail(){
-        multRotationZ(15)
-        multScale([0.6, 1, 0.2])
-        draw(SPHERE)
-    }
-
-    function tail(){
-        pushMatrix()
-            front_tail()
-        popMatrix()
-        pushMatrix()
-            multTranslation([-2.2, 0.3, 0])
-            back_tail()
-        popMatrix()
-            multTranslation([-2.25, 0.4, 0.1])
-            multRotationZ(rout_angle)
-            tail_helices()  //Helices pequenas agarradas ao cilindro
-        
-    }
-
-    // rename this later
-    function bp_support(){
-        multScale([0.2, 1, 0.2])
-        draw(CUBE, colors.grey)
-    }
-
-    function single_bear_paw(){
-        pushMatrix()  
-            multRotationZ(15)
-            multTranslation([1, 0, 0])
-            bp_support()
-        popMatrix()
-        pushMatrix()  
-            multRotationZ(-15)
-            multTranslation([-1, 0, 0])
-            bp_support()
-        popMatrix()
-            multTranslation([0, -0.25, 0])
-            multRotationY(90)
-            multRotationX(90)
-            multScale([0.3, 4, 0.3])
-            draw(CYLINDER, colors.yellow)
-        
-    }
-
-    function bearpaws(){
-        pushMatrix()
-            multTranslation([0, 0, -0.77])
-            multRotationX(30)
-            single_bear_paw()
-        popMatrix()
-            multTranslation([0, 0, 0.77])
-            multRotationX(-30)
-            single_bear_paw()
-    }
-
-    function helicopter(){
-
-        pushMatrix()
-            body()         //Esfera principal
-        popMatrix()
-
-        pushMatrix()
-            multTranslation([-4, 0.7, 0])
-            tail()          //Cauda principal e secundaria
-        popMatrix()
-
-        pushMatrix()
-            multTranslation([0, 1.75, 0])
-            multRotationY(rout_angle)
-            upper_helices()
-        popMatrix()
-            multTranslation([0, -2, 0])
-            bearpaws()      //Patas do helicoptero
-    }
-
-    function floor(){
-        multTranslation([0, -0.25, 0])
-        multScale([ 100, 0.25, 100])
-        draw(CUBE, colors.green) 
-    }
-
-    function drawScene(){
-        pushMatrix()
-            multRotationY(h_angle)
-            multTranslation([0, h_height, 20])
-            multRotationZ(h_slope_angle)
-            multRotationY(180)
-
-            heliModelView = modelView()
-            helicopter()
-        popMatrix()
-            floor()
-    }
-
 
     // others functions
     function getAxonoMatrix(){
@@ -442,20 +289,16 @@ function setup([shaders, scene_desc])
             h_height = Math.max(h_height - speed, min_h)
         }
 
+        upper_helices.rotationY = rout_angle
+        tail_helices.rotationZ = rout_angle
+        heli_forward.value = h_angle
+        helicopter.rotationZ = h_slope_angle
+        heli_height.value = [0, h_height, 0]
+
         // lookAt(eye, at, up)
-        // if it is an axono matrix just recalculate it :)
-
-        // some fun stuffs
-        if(heliModelView){
-            heliModel = mult(rotateY(h_forward_speed), mult( inverse(Mview), heliModelView))
-        }
-        
-        // calc
-
-        if(Mview.follow) Mview = getFollowMatrix(heliModel)
+        if(Mview.follow) Mview = getFollowMatrix(helicopter.modelMatrix)
         if(Mview.axono) Mview = getAxonoMatrix()
-        //loadMatrix(Mview)
-        //drawScene() // this mess will be fixed :)
+
         scene_graph.drawScene(draw, Mview)
     }
 }

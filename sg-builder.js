@@ -173,6 +173,7 @@ class Node{
     addTransformation(trans){
         trans.parent = this
         this.trans.push(trans)
+        return trans
     }
 
     removeTransformation(trans){
@@ -246,8 +247,19 @@ class RegularNode extends Node{
 
     // retuns an imediate child with name "name"
     getChild(name){
-        if(name in this.c_dict)
-            return this.c_dict[name]
+        return this.c_dict[name]
+    }
+
+    searchNode(name){
+        let child;
+        if(child = this.getChild(name)) return child
+
+        for(child of this.children){
+            if(!child.name && child instanceof RegularNode){
+                const node = child.getChild(name)
+                if(node) return node
+            }
+        }
         return null
     }
 
@@ -451,10 +463,11 @@ function fillNodeInfo(node, info){
 }
 
 function parseName(name){
-    if(typeof(name) === 'string' || name == undefined)
+    if(name == undefined || 
+        typeof(name) === 'string' && !name.includes('/'))
         return name || null
     else
-        throw new Error(`Invalid node's name: ${name}. Expected a string or nothing.`)
+        throw new Error(`Invalid node's name: '${name}'. Expected a string without '/' character or nothing.`)
 }
 
 function parseLeafNode(info, primitives){
@@ -624,6 +637,14 @@ class SceneGraph{
     }
 
     findNode(path){
+        const nodes = path.split('/')
+        let curr = this._root
+        for(let node of nodes){
+            if(!(curr instanceof RegularNode)) return null
+            curr = curr.searchNode(node)
+        }
+
+        return curr 
         // should go depening searching for the node
     }
 
@@ -646,5 +667,6 @@ class SceneGraph{
 } 
 
 export {
-    SceneGraph
+    SceneGraph,
+    RotationX, RotationY, RotationZ, Scale, Translation
 }
