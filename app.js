@@ -88,12 +88,16 @@ function followingCameraMProjection(){
     // returns the mProj for the following camera
 }
 // two problems how to switch when I switch camera?
-if(Mview.axono){
-    // do fun stuffs
-}else if(Mview.follow){
-    // do fum stuffs
-}else{
-    // do other fun stuffs
+{
+    function switchMProjection(newFunc){
+        mProjFunc = newFunc
+        mProjection = mProjFunc()
+    }
+    ....
+    if(mProjFunc != defaulMProjection && ...)
+        switchmProjection(defaultmProjection)
+    
+
 }
 
 */
@@ -152,7 +156,7 @@ function setup([shaders, scene_desc])
 
     let mProjection;
 
-    
+    let mProjFunc = defaultMProjection 
 
     mode = gl.TRIANGLES
 
@@ -174,22 +178,20 @@ function setup([shaders, scene_desc])
     window.addEventListener('keydown', e => {
         switch(e.key){
             case '1':
-                Mview = getAxonoMatrix()
+                setMview(getAxonoMatrix())
                 break
             case '2':
-                //Mview = lookAt([0, 0, 100], [0, 0, 0], [0,1,0])
-                Mview = basic_cameras.front
+                setMview(basic_cameras.front)
                 break
             case '3':
-                //Mview = lookAt([0, 100, 0], [0, 0, 0], [0,0,-1])
-                Mview = basic_cameras.top
+                setMview(basic_cameras.top, topCameraMProjection)
                 break
             case '4':
                 //Mview = lookAt([100, 0, 0], [0, 0, 0], [0,1,0])
-                Mview = basic_cameras.right
+                setMview(basic_cameras.right)
                 break
             case '5':
-                Mview = getFollowMatrix()
+                setMview(getFollowMatrix())
                 break
 
             case 'w':
@@ -218,18 +220,26 @@ function setup([shaders, scene_desc])
         canvas.height = window.innerHeight;
 
         aspect = canvas.width / canvas.height;
-        mProjection = defaultMProjection()
+        mProjection = mProjFunc()
         gl.viewport(0,0,canvas.width, canvas.height);
     }
 
+    function setMview(newMview, newMProjFunc=defaultMProjection){
+        Mview = newMview
+        if(newMProjFunc != mProjFunc){
+            mProjFunc = newMProjFunc
+            mProjection = mProjFunc()
+        }
+    }
+
+
     // define the mProjections functions
     function defaultMProjection(){
-        const value = 30
-        return ortho(-value * aspect, value * aspect, -value, value, 1, 200) 
+        return ortho(-30 * aspect, 30 * aspect, -30, 30, 1, 200) 
     }
 
     function topCameraMProjection(){
-
+        return ortho(-40 * aspect, 40 * aspect, -40, 40, 1, 200) 
     }
 
 
@@ -243,6 +253,8 @@ function setup([shaders, scene_desc])
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelViewMatrix));
         // upload normal matrix 
         gl.uniformMatrix3fv(gl.getUniformLocation(program, "mNormal"), false, flatten(mNormal));
+        // upload the lightOn (which means should I use illumination or not)
+        gl.uniform1i(gl.getUniformLocation(program, "uLightOn"), mode == gl.LINES ? 0 : 1)
 
         primitives[primitive].draw(gl, program, mode)
     }

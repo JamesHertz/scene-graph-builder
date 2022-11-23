@@ -5,7 +5,7 @@
             {
                 "name": "helicopter",
                 "rotation-y": 180,
-                "translation": [0, 2.25, 20],
+                "translation": [0, 2.25, 30],
                 "children": [
                         {
                             "name": "body",
