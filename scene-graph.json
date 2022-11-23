@@ -1,0 +1,146 @@
+{
+
+    "root": {
+        "children": [
+            {
+                "name": "floor",
+                "type": "leaf",
+                "translation": [0, -0.25, 0],
+                "scale": [100, 0.25, 100],
+                "primitive": "cube"
+            },
+            {
+                "type": "regular",
+                "name": "helicopter",
+                "children": [
+                    "body",
+                    {
+                        "type": "regular",
+                        "translation": [-4, 0.7, 0],
+                        "children": "tail"
+                    },
+                    {
+                        "type": "regular",
+                        "translation": [0, 1.75, 0],
+                        "rotation-y": 0,
+                        "children": "upper_helices"
+                    },
+                    {
+                        "type": "regular",
+                        "translation": [0, -2, 0],
+                        "children": "bearpaws"
+                    }
+
+                ]
+            }
+
+
+        ]
+    },
+
+    "base-nodes": {
+        "body": {
+            "type": "leaf",
+            "scale": [5, 3, 3],
+            "primitive": "sphere"
+        },
+
+        "tail": {
+            "type": "regular",
+            "children": [
+                "front-tail",
+                {
+                    "type": "regular",
+                    "translation": [-2.2, 0.3, 0],
+                    "children": "back-tail"
+                }, 
+                {
+                    "type": "regular",
+                    "translation": [-2.25, 0.4, 0.1],
+                    "rotation-z": 0,
+                    "children": "tail-helices"
+                }
+            ]
+
+        },
+
+        "bearpaws": {
+            "type": "regular",
+            "children": [
+                {
+                    "type": "regular",
+                    "translation": [0, 0, -0.77],
+                    "rotation-x": 30,
+                    "children": "single-bear-paw"
+                },
+
+                {
+                    "type": "regular",
+                    "translation": [0, 0, 0.77],
+                    "rotation-x": -30,
+                    "children": "single-bear-paw"
+                }
+
+            ]
+        },
+
+        "front-tail": {
+            "type": "leaf",
+            "color": "red",
+            "scale": [5, 0.8, 0.35],
+            "primitive": "sphere"
+        },
+
+        "back-tail": {
+            "type": "leaf",
+            "rotation-z": 15,
+            "scale": [0.6, 1, 0.2],
+            "primitive": "sphere"
+        },
+
+        "single-bear-paw": {
+            "type": "regular",
+            "children": [
+                {
+                    "type": "regular",
+                    "rotation-z": 15,
+                    "translation": [1, 0, 0],
+                    "children": "bp-support"
+                },
+
+                {
+                    "type": "regular",
+                    "rotation-z": -15,
+                    "translation": [-1, 0, 0],
+                    "children": "bp-support"
+                },
+
+                {   
+                    "type": "leaf", 
+                    "name": "landing-skid",
+                    "translation": [0, -0.25, 0],
+                    "rotation-x": 90,
+                    "rotation-y": 90,
+                    "scale": [0.3, 4, 0.3],
+                    "color": "yellow",
+                    "primitive": "cylinder"
+                }
+            ]
+
+        },
+
+        "bp-support": {
+            "type": "leaf",
+            "scale": [0.2, 1, 0.2],
+            "primitive": "cube",
+            "color": "grey"
+        },
+
+        "helice": {
+            "type": "leaf",
+            "scale": [4, 0.4, 0.4],
+            "primitive": "sphere"
+        }
+    } 
+
+}
