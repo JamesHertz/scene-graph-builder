@@ -8,9 +8,6 @@ import * as CYLINDER from '../libs/objects/cylinder.js'
 import * as TORUS from '../libs/objects/torus.js'
 import * as dat from '../libs/dat.gui.module.js'
 
-//import * as PYRAMID from '../../libs/objects/pyramid.js'
-
-
 /** @type WebGLRenderingContext */
 let gl;
 
@@ -22,18 +19,11 @@ let time = 0;
 
 let speed = 0;
 
-const colors = {
-    red: vec3(1, 0, 0),
-    yellow: vec3(1, 1, 0),
-    blue: vec3(0, 0, 1),
-    grey: vec3(0.5, 0.5, 0.5),
-    green: vec3(0, 1, 0)
-}
-
 const axono_pars = {
     theta: 60,
     gama: 15
 }
+
 const primitives = {
     'sphere': SPHERE,
     'cube': CUBE,
@@ -43,12 +33,12 @@ const primitives = {
 
 const basic_cameras = {
     front: lookAt([0, 0, 100], [0, 0, 0], [0,1,0]), 
-    // ask about this...
     top: lookAt([0, 100, 0], [0, 0, 0], [0,0,-1]),
     right: lookAt([100, 0, 0], [0, 0, 0], [0,1,0]),
 }
 
 
+// some constants related to the helicopter
 const MAX_SLOPE_ANGLE = 30,
       MAX_SPEED = -3.6,
       MAX_HEIGHT = 20,
@@ -63,8 +53,8 @@ let h_angle = 0
 let h_forward_speed = 0
 let h_slope_angle = 0
 
+// following camera initial eye and at
 const EYE = vec4(-5, 0, 0, 1), AT = vec4(0, 0, 0, 1)
-
 
 /*
 
@@ -75,11 +65,6 @@ but what we can do is to change it.
 problems to solve:
     when we are in up view we need to change the projection matrix
     to capture a wider area..
-
-    I sort of invented a very trick way to change the height but
-    what we actually have to do is to keep increasing the height
-    while the key is pressed.
-
 
 */
 
@@ -101,22 +86,16 @@ function setupControllers(){
 
     gui.open()
     folder.open()
+    console.log(folder)
 
     // to prevent unwanted results
-    // For example if we are chaing the game or the beta using the keyboard
+    // For example if we are chaging the game or the beta using the keyboard
     // we surely don't want it to change the camera to front, up or right
     gui.domElement.addEventListener('keydown', e => e.stopPropagation())
     gui.domElement.addEventListener('keyup', e => e.stopPropagation())
 }
 
-function getFollowMatrix(heliModel){
-    const eye = vec3(mult(heliModel, EYE))
-    const at =  vec3(mult(heliModel, AT))
 
-    const result = lookAt(eye, at, [0, 1, 0])
-    result.follow = true
-    return result
-}
 
 function setup([shaders, scene_desc])
 {
@@ -180,8 +159,7 @@ function setup([shaders, scene_desc])
                 Mview = basic_cameras.right
                 break
             case '5':
-                //Mview = lookAt([100, 100, 100], [0, 0, 0], [0,1,0])
-                Mview = getFollowMatrix(helicopter.modelMatrix)
+                Mview = getFollowMatrix()
                 break
 
             case 'w':
@@ -216,21 +194,20 @@ function setup([shaders, scene_desc])
     }
 
 
-    function draw(primitive, modelMatrix, color){
+    function draw(primitive, modelViewMatrix, color){
 
-        const mNormal = normalMatrix(modelMatrix, true)
+        const mNormal = normalMatrix(modelViewMatrix, true)
 
         // upload color
         gl.uniform3fv(gl.getUniformLocation(program, "uColor"), color)
         // upload model matrix
-        gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelMatrix));
+        gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelViewMatrix));
         // upload normal matrix 
         gl.uniformMatrix3fv(gl.getUniformLocation(program, "mNormal"), false, flatten(mNormal));
 
         primitives[primitive].draw(gl, program, mode)
     }
 
-    // others functions
     function getAxonoMatrix(){
         const {theta, gama} = axono_pars
         const result = mult( 
@@ -238,6 +215,16 @@ function setup([shaders, scene_desc])
             mult( rotateX(gama), rotateY(theta) )
         )
         result.axono = true
+        return result
+    }
+
+    function getFollowMatrix(){
+        const heliModel = helicopter.modelMatrix
+        const eye = vec3(mult(heliModel, EYE))
+        const at =  vec3(mult(heliModel, AT))
+
+        const result = lookAt(eye, at, [0, 1, 0])
+        result.follow = true
         return result
     }
 
@@ -291,7 +278,7 @@ function setup([shaders, scene_desc])
         heli_height.value = [0, h_height, 0]
 
         // lookAt(eye, at, up)
-        if(Mview.follow) Mview = getFollowMatrix(helicopter.modelMatrix)
+        if(Mview.follow) Mview = getFollowMatrix()
         if(Mview.axono) Mview = getAxonoMatrix()
 
         scene_graph.drawScene(draw, Mview)
