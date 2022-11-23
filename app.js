@@ -120,7 +120,6 @@ function setupControllers(){
 
     gui.open()
     folder.open()
-    console.log(folder)
 
     // to prevent unwanted results
     // For example if we are chaging the game or the beta using the keyboard

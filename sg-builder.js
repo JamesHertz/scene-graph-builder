@@ -228,8 +228,6 @@ class LeafNode extends Node{
      */
     draw(stack, draw){
         const tmp = stack[stack.length - 1]
-        //if(this.name == 'bp-support')
-        //    console.log(mult(tmp, this.modelMatrix))
         draw(this.primitive, mult(tmp, this.modelMatrix), this.color)
     }
 
