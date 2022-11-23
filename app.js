@@ -1,5 +1,5 @@
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
-import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, inverse, translate} from "../libs/MV.js";
+import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, perspective} from "../libs/MV.js";
 
 import { RotationY, SceneGraph, Translation } from "./sg-builder.js";
 import * as SPHERE from '../libs/objects/sphere.js'
@@ -54,7 +54,7 @@ let h_forward_speed = 0
 let h_slope_angle = 0
 
 // following camera initial eye and at
-const EYE = vec4(-5, 0, 0, 1), AT = vec4(0, 0, 0, 1)
+const EYE = vec4(-10, 0, 0, 1), AT = vec4(0, 0, 0, 1)
 
 /*
 
@@ -190,7 +190,7 @@ function setup([shaders, scene_desc])
                 setMview(basic_cameras.right)
                 break
             case '5':
-                setMview(getFollowMatrix())
+                setMview(getFollowMatrix(), followCameraMProjection)
                 break
 
             case 'w':
@@ -240,6 +240,9 @@ function setup([shaders, scene_desc])
     function topCameraMProjection(){
         return ortho(-40 * aspect, 40 * aspect, -40, 40, 1, 200) 
     }
+    function followCameraMProjection(){
+        return perspective(80, aspect, 5, 200) 
+    }
 
 
     function draw(primitive, modelViewMatrix, color){
@@ -272,6 +275,7 @@ function setup([shaders, scene_desc])
         const heliModel = helicopter.modelMatrix
         const eye = vec3(mult(heliModel, EYE))
         const at =  vec3(mult(heliModel, AT))
+        eye[1] = at[1] + 10 // TODO: make this a constant
 
         const result = lookAt(eye, at, [0, 1, 0])
         result.follow = true
