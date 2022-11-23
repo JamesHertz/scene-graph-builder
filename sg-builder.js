@@ -295,11 +295,6 @@ class RegularNode extends Node{
 // TODO: have constants for each one of the attributes
 // TODO: try to infere the type of the node
 
-// parsing functions
-
-// node type
-const LEAF = 'leaf', REGULAR = 'regular'
-
 // node's keys
 const optional_keys= [
     "rotation-x",
@@ -309,7 +304,6 @@ const optional_keys= [
     "scale",
     "name",
     "extra-trans",
-    "type" // it's required but it's here just to not guarantee not problem will happen
 ]
 
 // required keys for leaf and regular nodes respectively
@@ -513,11 +507,18 @@ function checkOrderProblem(parseCtx, info){
     const {base_nodes, nodes} = parseCtx
     let node = null
     if(nodes && base_nodes[info] !== null && (node = nodes[info])){
-        if(!node.name) node.name = info // if node doesn't have a name
+        if(!node.name) node = {...node, name: info} // if node doesn't have a name
         base_nodes[info] = null 
         node = base_nodes[info] = parseNode(parseCtx, node)
     }
     return node
+}
+
+// used to infer the type of the node :)
+function tryInferingType(info){
+    if(info.children) return REGULAR
+    if(info.primitive) return LEAF
+    return null
 }
 
 function parseNode(parseCtx, info){
@@ -530,24 +531,25 @@ function parseNode(parseCtx, info){
     }else if(typeof(info) !== 'object')
         throw new Error(`Expected a object or a base-node name but found '${typeof(info)}'`)
 
-    const {type} = info
-    if(type == LEAF){
+//    const type =tryInferingType(info)
+
+    if(info.primitive){
         try{
             return parseLeafNode(info, primitives)
         }catch(err){
            throw prefixErrorMessage('Error parsing leaf node: ', err) 
         }
-    }else if(type == REGULAR){
+    }else if(info.children){
         try{
             return parseRegularNode(parseCtx, info)
         }catch(err){
            throw prefixErrorMessage('Error parsing regular node: ', err) 
         }
     }else{
-        // think for a better solution :)
         const txt = JSON.stringify(info)
+        
         throw new Error(
-            `Invalid node type in '${txt}'\n It should've been either '${REGULAR}' or '${LEAF}'.`
+            `Invalid node ${txt}. It should either have 'children' and be regular or have primitive and be leaf`
         )
     }
 
@@ -573,7 +575,7 @@ function parseScene(scene_desc, primitives){
             throw new Error('Invalid base-nodes. It should be a dictionary of nodes.')
 
         for(let key in nodes){
-            const node_desc = nodes[key]
+            let node_desc = nodes[key]
             const {name} = node_desc
 
             if(name != undefined && name != key)
@@ -582,7 +584,7 @@ function parseScene(scene_desc, primitives){
                     )
 
                 if(!base_nodes[key]){
-                    node_desc.name = key
+                    node_desc = {...node_desc, name: key}
                     base_nodes[key] = parseNode(parseCtx, node_desc)
                 }
 
