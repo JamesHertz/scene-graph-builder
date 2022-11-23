@@ -66,6 +66,36 @@ problems to solve:
     when we are in up view we need to change the projection matrix
     to capture a wider area..
 
+
+problem:
+    For certain Mview I would love to have differents
+    mProjection.
+    The problem of having different mProjection is that 
+    we need to switch for the current one when needed,
+    and when resizing the window we need to calculate the 
+    value for the right one
+
+
+function defaultMProjection(){
+    // returns the default one
+}
+
+function topCameraMProjection(){
+    // returns the mProj for the top camera
+}
+
+function followingCameraMProjection(){
+    // returns the mProj for the following camera
+}
+// two problems how to switch when I switch camera?
+if(Mview.axono){
+    // do fun stuffs
+}else if(Mview.follow){
+    // do fum stuffs
+}else{
+    // do other fun stuffs
+}
+
 */
 
 const pressed_keys = {
@@ -187,10 +217,19 @@ function setup([shaders, scene_desc])
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const value = 30
         aspect = canvas.width / canvas.height;
-        mProjection = ortho(-value * aspect, value * aspect, -value, value, 1, 200) 
+        mProjection = defaultMProjection()
         gl.viewport(0,0,canvas.width, canvas.height);
+    }
+
+    // define the mProjections functions
+    function defaultMProjection(){
+        const value = 30
+        return ortho(-value * aspect, value * aspect, -value, value, 1, 200) 
+    }
+
+    function topCameraMProjection(){
+
     }
 
 
