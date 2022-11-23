@@ -1,9 +1,13 @@
 import {rotateX, rotateY, rotateZ, mat4, vec3, mult, translate, scalem} from "../libs/MV.js";
 
-// transformations...
-// abstract base transformation
+// represents a transformation
 class BaseTransformation{
-    // think about the parent node ...
+    /**
+     * 
+     * @param { number | Array<number>  } value tranformation value, it can be a number 
+     *  in case of a rotation or an array of numbers if it's a translation or an scale
+     * @param { Node } parentNode the parent node that this transformation is part of
+     */
     constructor(value, parentNode){ 
         this._parent = parentNode
         this.value = value 
@@ -15,7 +19,7 @@ class BaseTransformation{
 
     set value(newValue){
         this._value = newValue
-        this.dirty = true
+        this.dirty = true // means the value of the transformation was changed
 
         // if the parent is set then :)
         if(this._parent) this._parent.changeHandler()
@@ -93,7 +97,7 @@ class RotationZ extends BaseTransformation{
     }
 }
 
-// think about the calc_model_matrix
+// Represents an node, it can be thought of as an abstract node
 class Node{
     
     constructor(name){
@@ -182,6 +186,9 @@ class Node{
     }
 
     // calculates the model matrix lazily :)
+    // I called it model but it's more like a matrix with the 
+    // transformation made to the object itself. To get the real
+    // model matrix we would have take in account all it's predecessors
     get modelMatrix(){
         if(this.dirty){
             this._modelMatrix = this.calc_model_matrix()
@@ -193,9 +200,13 @@ class Node{
 
 }
 
-// think about the rest later
 class LeafNode extends Node{
-    // fill later
+    /**
+     * 
+     * @param {string | null} name 
+     * @param {string} primitive 
+     * @param {Array<number>} color 
+     */
     constructor(name, primitive, color){
         super(name)
         this._primitive = primitive
@@ -210,11 +221,10 @@ class LeafNode extends Node{
         return this._primitive
     }
 
-    // later
     /**
-     * 
+     *  
      * @param {Array} stack 
-     * @param {Function} upload 
+     * @param {(primitive, modelView, color) => void} draw 
      */
     draw(stack, draw){
         const tmp = stack[stack.length - 1]
@@ -263,12 +273,17 @@ class RegularNode extends Node{
         return null
     }
 
+    /**
+     * 
+     * @param {Node | string} child  the name of the node or it's reference
+     * @returns a Node or null if such node doesn't exit 
+     */
     removeChild(child){
         let ref;
 
         if(typeof(child) == 'string')
             ref = this.c_dict[child]
-        else // assuming it's an object
+        else // assuming it's a Node
             ref = this._children.find( c => child == c)
         
         if(ref){
@@ -287,7 +302,7 @@ class RegularNode extends Node{
     /**
      * 
      * @param {Array} stack 
-     * @param {Function} upload 
+     * @param {(primitive, modelView, color) => void} draw 
      */
     draw(stack, draw){
         const lastIdx = stack.length - 1
@@ -305,7 +320,6 @@ class RegularNode extends Node{
 
 
 // TODO: have constants for each one of the attributes
-// TODO: try to infere the type of the node
 
 // node's keys
 const optional_keys= [
@@ -333,13 +347,21 @@ const colors = {
     black: vec3(0, 0, 0)
 }
 
+const DEFAULT_COLOR = colors.white
+
 function prefixErrorMessage(prefix, error){
     error.message = prefix + error.message
     return error
 }
 /**
+ * Given an object it checks if the received object has
+ * all the required keys (reqKeys) and has nothing more than
+ * the required keys plus the optional keys (optKeys).
  * 
- * @param {Object} node 
+ * If so it returns another object with all the keys the recieved object
+ * had. Else it throws an exception.
+ * 
+ * @param {object} node 
  * @param {Array<String>} optKeys  optionals keys the object can have
  * @param {Array<String>} reqkeys  required keys the object should have
  */
@@ -377,8 +399,6 @@ const trans_type2 = {
     'rotation-y': RotationY,
     'rotation-z': RotationZ
 }
-
-const DEFAULT_COLOR = colors.white
 
 function getTransOrScale(type, trans){
     if(trans instanceof Array 
@@ -479,7 +499,6 @@ function parseLeafNode(info, primitives){
     if(!primitives.includes(primitive))
         throw new Error(`Invalid primitive:'${primitive}'`)
 
-    // Future plans: accept an array of 3 numbers as well
     color = parseColor(color)
     const leafNode = new LeafNode(name, primitive, color)
 
@@ -521,6 +540,10 @@ function checkOrderProblem(parseCtx, info){
     let node = null
     if(nodes && base_nodes[info] !== null && (node = nodes[info])){
         if(!node.name) node = {...node, name: info} // if node doesn't have a name
+        // we set this to null which means we are parsing this node
+        // then we check if it's not null meaning we are not parsing it
+        // because if while parsing this node we try try to parse it again
+        // we have a cycle :)
         base_nodes[info] = null 
         node = base_nodes[info] = parseNode(parseCtx, node)
     }
@@ -531,52 +554,57 @@ function parseNode(parseCtx, info){
     const {base_nodes, primitives} = parseCtx
 
     if(typeof(info) === 'string'){
+        // check's if the node was parsed before or if it exist but it wasn't parsed
+        // this will happen because while parsing the children of a regular node
+        // we willl call this function for each one of them 
         const node = base_nodes[info] || checkOrderProblem(parseCtx, info)
         if(!node) throw new Error(`Base node '${info}' doesn't exit.`)
         return node
     }else if(typeof(info) !== 'object')
         throw new Error(`Expected a object or a base-node name but found '${typeof(info)}'`)
 
-//    const type =tryInferingType(info)
+    const {primitive, children} = info
 
-    if(info.primitive){
+    if(primitive && children || !(primitive || children)){
+        const txt = JSON.stringify(info)
+        throw new Error(
+            `Invalid node ${txt}. It should have either key: 'children' and be regular node or 'primitive' and be leaf node`
+        )
+    // else means primitive || children
+    }else if(primitive){
         try{
             return parseLeafNode(info, primitives)
         }catch(err){
            throw prefixErrorMessage('Error parsing leaf node: ', err) 
         }
-    }else if(info.children){
+    }else{ // if(info.children)
         try{
             return parseRegularNode(parseCtx, info)
         }catch(err){
            throw prefixErrorMessage('Error parsing regular node: ', err) 
         }
-    }else{
-        const txt = JSON.stringify(info)
-        
-        throw new Error(
-            `Invalid node ${txt}. It should either have 'children' and be regular or have primitive and be leaf`
-        )
     }
-
 }
 
 function parseScene(scene_desc, primitives){
     let scene;
 
     try{
+        // certifing that the scene_desc is an object and that is has
+        // 'root' as one of it's key. Also that that it has nothing more
+        // than 'root' and 'base-nodes' has keys.
         scene = createNode(scene_desc, ['base-nodes'], ['root']) 
     }catch(err){
         throw prefixErrorMessage('Error parsing scene_desc: ', err)
     }
 
     const nodes = scene['base-nodes']
-    const base_nodes = {}
+    const base_nodes = {} // parsed based nodes that will be Node's object
 
-    // idea to solve the problem of order
-    // in parseNode() sends nodes are one of the args
+    // parse context which will store some importants
+    // data-structures for parsing.
     const parseCtx = {primitives, base_nodes, nodes}
-    if(nodes){
+    if(nodes !== undefined){
         if(typeof(nodes) != 'object')
             throw new Error('Invalid base-nodes. It should be a dictionary of nodes.')
 
@@ -588,8 +616,11 @@ function parseScene(scene_desc, primitives){
                 throw new Error(
                     `Base node name inconsistence. It's named as '${name}' while it's key is '${key}'`
                     )
-
-                if(!base_nodes[key]){
+                // check if the base node wasn't parsed, because while parsing base
+                // we may stumble into other that weren't parsed yet and we will 
+                // parsed then first, which means that we don't need to parse this again
+                // To better understand this look for the checkOrderProblem function
+                if(!base_nodes[key]){ 
                     node_desc = {...node_desc, name: key}
                     base_nodes[key] = parseNode(parseCtx, node_desc)
                 }
@@ -608,11 +639,9 @@ function parseScene(scene_desc, primitives){
 class SceneGraph{
 
     /**
-     * 
-     * @param {Object} scene_desc 
-     * @param {Array<String>} primitives 
+     * @param {Object} scene_desc a json with the description of the scene
+     * @param {Array<String>} primitives  an array of strings with the supported primtives
      */
-    // think about this...
     constructor(scene_desc, primitives){
         const {root, base_nodes} = parseScene(scene_desc, primitives)
         this._root = root
@@ -624,11 +653,23 @@ class SceneGraph{
         return this._root
     }
 
-    // think about this later
     getBaseNode(name){
         return this.base_nodes[name]
     }
 
+    /**
+     * Given a path for a node with the format
+     * <node_name_1>/<node_name_2>/.../<target_node_name> it searches
+     * follows the path from the root node. It's worth having in mind that 
+     * the <node_name_1> is a child's node of the root node.
+     * 
+     * Also it's worth remembering that it skips the unnamed nodes which 
+     * means that if <node_name_n> is within an unamed node that is within 
+     * <node_name_n-1>, the following path <node_name_n-1>/<node_name_n>
+     * will get us to <node_name_n>.
+     * @param {string} path 
+     * @returns a node or null if it doesn't find such node
+     */
     findNode(path){
         const nodes = path.split('/')
         let curr = this._root
@@ -638,9 +679,13 @@ class SceneGraph{
         }
 
         return curr 
-        // should go depening searching for the node
     }
 
+    /**
+     * Given a json creates a node
+     * @param {object} node_desc 
+     * @returns 
+     */
     createNode(node_desc){
         //if(typeof(node_desc) == 'string')
         //    node_desc = {type:'regular', children: node_desc}
@@ -648,7 +693,9 @@ class SceneGraph{
     }
 
     /**
-     * 
+     * Draw's he scene given the ViewMatrix and a draw function.
+     * The draw function will receive the LeafNode primitive
+     * it's modelViewMatrix and it's color.
      * @param {(primitive, modelView, color) => void} draw 
      * @param {mat4} Mview 
      */

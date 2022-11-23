@@ -1,6 +1,5 @@
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
 import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, inverse, translate} from "../libs/MV.js";
-import {modelView, loadMatrix, multRotationY, multScale} from "../libs/stack.js";
 
 import { RotationY, SceneGraph, Translation } from "./sg-builder.js";
 import * as SPHERE from '../libs/objects/sphere.js'
@@ -8,7 +7,6 @@ import * as CUBE from '../libs/objects/cube.js';
 import * as CYLINDER from '../libs/objects/cylinder.js'
 import * as TORUS from '../libs/objects/torus.js'
 import * as dat from '../libs/dat.gui.module.js'
-import { multRotationX, multRotationZ, multTranslation, popMatrix, pushMatrix } from "../libs/stack.js";
 
 //import * as PYRAMID from '../../libs/objects/pyramid.js'
 
@@ -132,9 +130,6 @@ function setup([shaders, scene_desc])
     const heli_forward = helicopter.addTransformation(new RotationY(0))
     
 
-    console.log(tail_helices)
-    console.log(upper_helices)
-
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
 
@@ -221,7 +216,7 @@ function setup([shaders, scene_desc])
     }
 
 
-    function draw(primitive, modelMatrix, color=colors.red){
+    function draw(primitive, modelMatrix, color){
 
         const mNormal = normalMatrix(modelMatrix, true)
 
