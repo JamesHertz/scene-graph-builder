@@ -217,6 +217,8 @@ class LeafNode extends Node{
      */
     draw(stack, draw){
         const tmp = stack[stack.length - 1]
+        //if(this.name == 'bp-support')
+        //    console.log(mult(tmp, this.modelMatrix))
         draw(this.primitive, mult(tmp, this.modelMatrix), this.color)
     }
 
@@ -291,6 +293,7 @@ class RegularNode extends Node{
 
 
 // TODO: have constants for each one of the attributes
+// TODO: try to infere the type of the node
 
 // parsing functions
 
@@ -397,8 +400,6 @@ function parseColor(color){
     }else
         throw new Error(`Invalid color:'${color}'`)
 }
-
-
 
 // TODO: think about the txt ??
 // TODO: refactor the Error parsing 'extra-trans' X
@@ -514,7 +515,7 @@ function checkOrderProblem(parseCtx, info){
     if(nodes && base_nodes[info] !== null && (node = nodes[info])){
         if(!node.name) node.name = info // if node doesn't have a name
         base_nodes[info] = null 
-        base_nodes[info] = parseNode(parseCtx, node)
+        node = base_nodes[info] = parseNode(parseCtx, node)
     }
     return node
 }
@@ -635,7 +636,7 @@ class SceneGraph{
      * @param {(primitive, modelView, color) => void} draw 
      * @param {mat4} Mview 
      */
-    drawScene(draw, Mview){
+    drawScene(draw, Mview=mat4()){
         const stack = [Mview] 
         this.root.draw(stack, draw)
     }
@@ -645,49 +646,3 @@ class SceneGraph{
 export {
     SceneGraph
 }
-
-/*
-const node = {
-    type: 'regular',
-    translation: [2, 2, 2],
-    'extra-trans': [
-        {type: 'translation', value: [1, 1, 2]}
-    ],
-    children:  [{
-        type: 'leaf',
-        primitive: 'cube'
-    }, 'floor']
-}
-
-const floor = new LeafNode('floor', 'cube', vec3(1, 1, 1))
-
-const parseCtx = {
-    primitives: ['cube', 'cylinder'],
-    base_nodes: {floor} 
-}
-
-const result = parseNode(parseCtx, node)
-console.log(result.modelMatrix)
-console.log(result.children)
-const sg_desc = {
-    root: {
-        type: 'regular',
-        children: 'box'
-    },
-    'base-nodes': {
-        box: {
-            type: 'regular',
-            scale: [2, 2, 2],
-            children: ['large-box']
-        },
-        
-        'large-box': {
-            type: 'leaf',
-            primitive: 'cube'
-        }
-
-    }
-}
-const sg = new SceneGraph(sg_desc, ['cube'])
-*/
-
