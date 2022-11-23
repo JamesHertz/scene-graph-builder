@@ -1,11 +1,171 @@
 {
 
     "root": {
+        "children": [
+            {
+                "name": "helicopter",
+                "rotation-y": 180,
+                "translation": [0, 2.25, 20],
+                "children": [
+                        {
+                            "name": "body",
+                            "scale": [5, 3, 3],
+                            "color": "red",
+                            "primitive": "sphere"
+                        },
+                        {
+                            "name": "bearpaws",
+                            "children": [
+                                {
+                                    "translation": [0, 0, -0.77],
+                                    "rotation-x": 30,
+                                    "children": "single-bearpaw"
+                                },
+                                {
+                                    "translation": [0, 0, 0.77],
+                                    "rotation-x": -30,
+                                    "children": "single-bearpaw"
+                                }
+                            ]
+                        },
+                        {
+                            "translation": [0, 1.75, 0],
+                            "children": "upper-helices"
+                        },
+                        {
+                            "translation": [0, -2, 0],
+                            "children": "bearpaws"
+                        },
+                        {
+                            "translation": [-4, 0.7, 0],
+                            "children": "tail"
+                        }
+
+                ]
+            },
+            {
+                "name": "floor",
+                "translation": [0, -0.25, 0],
+                "scale": [100, 0.25, 100],
+                "color": "green",
+                "primitive": "cube"
+            }
+        ]
     },
-
     "base-nodes": {
+        "upper-helices": {
+            "children": [
+                {
+                    "name": "upper-helice-junction",
+                    "scale": [0.3, 0.6, 0.3],
+                    "color": "yellow",
+                    "primitive": "cylinder"
+                }, 
+                {
+                    "translation": [-2, 0, 1.75],
+                    "children": "normal-helice"
+                },
+                {
+                    "translation": [1, 0, 1.75],
+                    "rotation-y": 120,
+                    "children": "normal-helice"
+                },
+                {
+                    "translation": [1, 0, -1.75],
+                    "rotation-y": 240,
+                    "children": "normal-helice"
+                }
 
-        "bp_support": {
+            ]
+        },
+        "tail": {
+            "children": [
+                {
+                    "name": "front-tail",
+                    "color": "red",
+                    "scale": [5, 0.8, 0.35],
+                    "primitive": "sphere"
+                }, 
+                {
+                    "name": "back-tail",
+                    "translation": [-2.2, 0.3, 0],
+                    "rotation-z": 15,
+                    "scale": [0.6, 1, 0.2],
+                    "color": "red",
+                    "primitive": "sphere"
+                }, 
+                {
+                    "name": "tail-helices",
+                    "translation": [-2.25, 0.4, 0.1],
+                    "children": [
+                            {
+                                "name": "tail-helice-junction",
+                                "scale": [0.2, 0.1, 0.2],
+                                "rotation-x": 90,
+                                "color": "yellow",
+                                "primitive": "cylinder"
+                            },
+                            {
+                                "translation": [0.45, 0, 0],
+                                "children": "tiny-helice"
+                            },
+                            {
+                                "translation": [-0.45, 0, 0],
+                                "children": "tiny-helice"
+                            }
+                    ] 
+
+                }
+            ]
+        },
+
+        "single-bearpaw": {
+            "children": [
+                {
+                    "translation": [1, 0, 0],
+                    "children": "bearpaw-support",
+                    "extra-trans": {
+                        "type": "rotation-z",
+                        "value": 15
+                    }
+                },
+                {
+                    "translation": [-1, 0, 0],
+                    "children": "bearpaw-support",
+                    "extra-trans": {
+                        "type": "rotation-z",
+                        "value": -15
+                    }
+                }, 
+                {
+                    "name": "skids",
+                    "translation": [0, -0.25, 0],
+                    "scale": [0.3, 4, 0.3],
+                    "rotation-x": 90,
+                    "rotation-y": 90,
+                    "color": "yellow",
+                    "primitive": "cylinder"
+                }
+            ]
+
+        },
+
+        "tiny-helice": {
+            "scale": [1, 0.3, 0.15],
+            "color": "blue",
+            "primitive": "sphere"
+        },
+
+        "normal-helice": {
+            "scale": [4, 0.4, 0.4],
+            "primitive": "sphere",
+            "color": "blue"
+        },
+
+        "bearpaw-support": {
+            "scale": [0.2, 1, 0.2],
+            "color": "grey",
+            "primitive": "cube"
         }
     } 
 
