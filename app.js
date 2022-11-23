@@ -2,6 +2,7 @@ import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../lib
 import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, inverse, translate} from "../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale} from "../libs/stack.js";
 
+import { SceneGraph } from "./sg-builder.js";
 import * as SPHERE from '../libs/objects/sphere.js'
 import * as CUBE from '../libs/objects/cube.js';
 import * as CYLINDER from '../libs/objects/cylinder.js'
@@ -35,27 +36,12 @@ const axono_pars = {
     theta: 60,
     gama: 15
 }
-
-// TODO: config file with the schene graph
-/* 
-scene-graph: {
-    translation: [tx, ty, tz]
-    rotation: [rx, ry, rz]
-    scale: [sx, sy, sz]
-    ?draw: <node-id> 
-    children: []
+const primitives = {
+    'sphere': SPHERE,
+    'cube': CUBE,
+    'cylinder': CYLINDER,
+    'torus': TORUS
 }
-
-nodes: [
-    {
-        node-id: id1
-        translation: [tx, ty, tz]
-        rotation: [rx, ry, rz]
-        scale: [sx, sy, sz]
-        draw: <node-id> | nodes[]
-    }
-]
-*/
 
 const basic_cameras = {
     front: lookAt([0, 0, 100], [0, 0, 0], [0,1,0]), 
@@ -99,8 +85,6 @@ problems to solve:
 
 */
 
-// think seriously about the config file ...
-
 const pressed_keys = {
     ArrowUp: false,
     ArrowDown: false,
@@ -127,7 +111,6 @@ function setupControllers(){
     gui.domElement.addEventListener('keyup', e => e.stopPropagation())
 }
 
-
 function getFollowMatrix(heliModel){
     const eye = vec3(mult(heliModel, EYE))
     const at =  vec3(mult(heliModel, AT))
@@ -137,9 +120,10 @@ function getFollowMatrix(heliModel){
     return result
 }
 
-function setup(shaders)
+function setup([shaders, scene_desc])
 {
-    // some constants
+
+    const scene_graph = new SceneGraph(scene_desc, Object.keys(primitives))
 
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
@@ -231,18 +215,18 @@ function setup(shaders)
     }
 
 
-    function uploadModelView()
-    {
-        gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelView()));
-    }
+    function draw(primitive, modelMatrix, color=colors.red){
 
-    function draw(primitive, color=colors.red){
-        uploadModelView()
+        const mNormal = normalMatrix(modelMatrix, true)
+
+        // upload color
         gl.uniform3fv(gl.getUniformLocation(program, "uColor"), color)
-
-        const mNormal = normalMatrix(modelView(), true)
+        // upload model matrix
+        gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelMatrix));
+        // upload normal matrix 
         gl.uniformMatrix3fv(gl.getUniformLocation(program, "mNormal"), false, flatten(mNormal));
-        primitive.draw(gl, program, mode)
+
+        primitives[primitive].draw(gl, program, mode)
     }
 
     function tiny_helice(){
@@ -470,10 +454,14 @@ function setup(shaders)
 
         if(Mview.follow) Mview = getFollowMatrix(heliModel)
         if(Mview.axono) Mview = getAxonoMatrix()
-        loadMatrix(Mview)
-        drawScene() // this mess will be fixed :)
+        //loadMatrix(Mview)
+        //drawScene() // this mess will be fixed :)
+        scene_graph.drawScene(draw, Mview)
     }
 }
 
 const urls = ["shader.vert", "shader.frag"];
-loadShadersFromURLS(urls).then(shaders => setup(shaders))
+Promise.all([
+    loadShadersFromURLS(urls),
+    fetch('scene-graph.json').then(sg => sg.json())
+]).then(setup)
