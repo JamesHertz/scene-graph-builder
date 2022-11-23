@@ -527,13 +527,6 @@ function checkOrderProblem(parseCtx, info){
     return node
 }
 
-// used to infer the type of the node :)
-function tryInferingType(info){
-    if(info.children) return REGULAR
-    if(info.primitive) return LEAF
-    return null
-}
-
 function parseNode(parseCtx, info){
     const {base_nodes, primitives} = parseCtx
 
