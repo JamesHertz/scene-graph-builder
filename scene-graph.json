@@ -31,7 +31,7 @@
             {
                 "name": "floor",
                 "translation": [0, -0.25, 0],
-                "scale": [100, 0.25, 100],
+                "scale": [150, 0.25, 150],
                 "color": "green",
                 "primitive": "cube"
             }
