@@ -251,6 +251,7 @@ class RegularNode extends Node{
             this.c_dict[node.name] = node
 
         this._children.push(node)
+        return node
     }
 
     // retuns an imediate child with name "name"

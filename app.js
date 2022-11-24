@@ -1,5 +1,5 @@
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
-import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, mult, vec4, perspective} from "../libs/MV.js";
+import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, scale, vec4, perspective, add, mult, subtract} from "../libs/MV.js";
 
 import { RotationY, SceneGraph, Translation } from "./sg-builder.js";
 import * as SPHERE from '../libs/objects/sphere.js'
@@ -17,7 +17,6 @@ let last_time = undefined
 
 let time = 0;
 
-let speed = 0;
 
 const axono_pars = {
     theta: 60,
@@ -128,11 +127,17 @@ function setupControllers(){
     gui.domElement.addEventListener('keyup', e => e.stopPropagation())
 }
 
+const box_node = {
+    scale: [2, 2,2],
+    color: 'blue',
+    primitive: 'cube'
+}
 
+// 30 * w * (-sin(a), 0, cos(a))
 
 function setup([shaders, scene_desc])
 {
-
+    let boxes = [] // an array of {node, life, speed}
     const scene_graph = new SceneGraph(scene_desc, Object.keys(primitives))
     const helicopter = scene_graph.findNode('helicopter')
     const tail_helices = scene_graph.findNode('helicopter/tail/tail-helices')
@@ -186,19 +191,22 @@ function setup([shaders, scene_desc])
                 setMview(basic_cameras.top, topCameraMProjection)
                 break
             case '4':
-                //Mview = lookAt([100, 0, 0], [0, 0, 0], [0,1,0])
                 setMview(basic_cameras.right)
                 break
             case '5':
                 setMview(getFollowMatrix(), followCameraMProjection)
                 break
-
             case 'w':
                 mode = gl.LINES
                 break
 
             case 's':
                 mode = gl.TRIANGLES
+                break
+
+            case ' ':
+                // get the intial velocity
+                boxes.push(createBox())
                 break
 
             default:
@@ -231,6 +239,34 @@ function setup([shaders, scene_desc])
         }
     }
 
+    function createBox(){
+        const heli_pos = mult(
+            helicopter.modelMatrix,
+            vec4(0, 0, 0, 1) 
+        )
+
+        // TODO: some constants
+        const angle_speed = -30 * h_forward_speed/180 * Math.PI
+
+        const speed_vector = subtract(
+            mult(helicopter.modelMatrix, vec4(1, 0, 0, 1)),
+            mult(helicopter.modelMatrix, vec4(0, 0, 0, 1))
+        )
+
+        const speed = vec3(scale(angle_speed, speed_vector))
+        speed[1] = 0
+        
+        const box = {
+            life: 5000,
+            speed,
+            node: scene_graph.createNode({
+                ...box_node, 
+                translation: vec3(...heli_pos)
+            })
+        }
+        scene_graph.root.addChild(box.node)
+        return box
+    }
 
     // define the mProjections functions
     function defaultMProjection(){
@@ -284,16 +320,18 @@ function setup([shaders, scene_desc])
 
     function render(timestamp)
     {
+        let delta_time = 0;
+
         if(last_time == undefined) time = 0
         else{
-            speed = (timestamp - last_time) / 60
-            time +=  speed
+            delta_time = timestamp - last_time
+            time += delta_time / 1000 
         } 
 
         last_time = timestamp
 
         // if we want to do some physics here is the place :)
-        rout_angle = (h_height > MIN_HEIGHT) ? time * 2 * Math.PI * 8 : 0
+        rout_angle = (h_height > MIN_HEIGHT) ? time * 2 * Math.PI * 100 : 0
 
         window.requestAnimationFrame(render);
 
@@ -306,23 +344,23 @@ function setup([shaders, scene_desc])
         // think about this later?
         // would it better to use acceleration?
         if(pressed_keys.ArrowLeft && h_height > MIN_FLY_HEIGHT){
-            h_forward_speed = Math.max(h_forward_speed - 0.1,  MAX_SPEED)
+            h_forward_speed = Math.max(h_forward_speed - delta_time/160,  -4)
         }
 
         if(h_forward_speed){
-            h_forward_speed = Math.min(0, h_forward_speed + 0.025)
+            h_forward_speed = Math.min(0, h_forward_speed + delta_time/(2 *360))
             h_angle += h_forward_speed 
         }
 
         h_slope_angle = h_forward_speed/MAX_SPEED * 30
    
         if(pressed_keys.ArrowUp) {
-            h_height = Math.min(h_height + speed, MAX_HEIGHT)
+            h_height = Math.min(h_height + delta_time / 60, MAX_HEIGHT)
         }
 
         if(pressed_keys.ArrowDown) {
             const min_h = (h_slope_angle> 0) ? MIN_FLY_HEIGHT : MIN_HEIGHT 
-            h_height = Math.max(h_height - speed, min_h)
+            h_height = Math.max(h_height - delta_time / 60, min_h)
         }
 
         upper_helices.rotationY = rout_angle
@@ -330,6 +368,26 @@ function setup([shaders, scene_desc])
         heli_forward.value = h_angle
         helicopter.rotationZ = h_slope_angle
         heli_height.value = [0, h_height, 0]
+
+        // update box
+        // remaining boxes
+        const rem_boxes = []
+        for(let b of boxes){
+            b.life -= delta_time 
+
+            if(b.life <= 0)
+                scene_graph.root.removeChild(b.node)
+            else 
+                rem_boxes.push(b)
+
+            //0.0098 
+            // make it's speed evolve
+            // make it's posit/ion evolve
+
+            let position = b.node.translation
+            b.node.translation = add(position, scale( 0.1, b.speed))
+        }
+        boxes = rem_boxes
 
         // lookAt(eye, at, up)
         if(Mview.follow) Mview = getFollowMatrix()
