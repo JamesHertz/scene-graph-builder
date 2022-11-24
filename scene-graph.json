@@ -14,51 +14,16 @@
                             "primitive": "sphere"
                         },
                         {
-                            "name": "bearpaws",
                             "translation": [0, -2, 0],
-                            "children": [
-                                {
-                                    "translation": [0, 0, -0.77],
-                                    "rotation-x": 30,
-                                    "children": "single-bearpaw"
-                                },
-                                {
-                                    "translation": [0, 0, 0.77],
-                                    "rotation-x": -30,
-                                    "children": "single-bearpaw"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "upper-helices",
-                            "translation": [0, 1.75, 0],
-                            "children": [
-                                {
-                                    "name": "upper-helice-junction",
-                                    "scale": [0.3, 0.6, 0.3],
-                                    "color": "yellow",
-                                    "primitive": "cylinder"
-                                }, 
-                                {
-                                    "translation": [-2, 0, 0],
-                                    "children": "normal-helice"
-                                },
-                                {
-                                    "translation": [1, 0, 1.75],
-                                    "rotation-y": 120,
-                                    "children": "normal-helice"
-                                },
-                                {
-                                    "translation": [1, 0, -1.75],
-                                    "rotation-y": 240,
-                                    "children": "normal-helice"
-                                }
-
-                            ]
+                            "children": "bearpaws"
                         },
                         {
                             "translation": [-4, 0.7, 0],
                             "children": "tail"
+                        },
+                        {
+                            "translation": [0, 1.75, 0],
+                            "children": "upper-helices"
                         }
 
                 ]
@@ -73,6 +38,47 @@
         ]
     },
     "base-nodes": {
+           "bearpaws":{
+                "children": [
+                    {
+                        "translation": [0, 0, -0.77],
+                        "rotation-x": 30,
+                        "children": "single-bearpaw"
+                    },
+                    {
+                        "translation": [0, 0, 0.77],
+                        "rotation-x": -30,
+                        "children": "single-bearpaw"
+                    }
+                ]
+            },
+
+            "upper-helices": {
+                "children": [
+                    {
+                        "name": "upper-helice-junction",
+                        "scale": [0.3, 0.6, 0.3],
+                        "color": "yellow",
+                        "primitive": "cylinder"
+                    }, 
+                    {
+                        "translation": [-2, 0, 0],
+                        "children": "normal-helice"
+                    },
+                    {
+                        "translation": [1, 0, 1.75],
+                        "rotation-y": 120,
+                        "children": "normal-helice"
+                    },
+                    {
+                        "translation": [1, 0, -1.75],
+                        "rotation-y": 240,
+                        "children": "normal-helice"
+                    }
+
+                ]
+        },
+
         "tail": {
             "children": [
                 {

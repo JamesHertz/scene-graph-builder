@@ -136,7 +136,7 @@ function setup([shaders, scene_desc])
     const scene_graph = new SceneGraph(scene_desc, Object.keys(primitives))
     const helicopter = scene_graph.findNode('helicopter')
     const tail_helices = scene_graph.findNode('helicopter/tail/tail-helices')
-    const upper_helices = scene_graph.findNode('helicopter/upper-helices')
+    const upper_helices = scene_graph.getBaseNode('upper-helices')
 
     const heli_height = helicopter.addTransformation(new Translation([0, 0, 0]))
     const heli_forward = helicopter.addTransformation(new RotationY(0))
