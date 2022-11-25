@@ -34,6 +34,50 @@
                 "scale": [150, 0.25, 150],
                 "color": "green",
                 "primitive": "cube"
+            },
+            {
+                "name": "trees",
+                "children": [{
+                    "translation": [20,0,10],
+                    "children": "tree"
+                },
+                {
+                    "translation": [-10,0,-15],
+                    "children": "tree"
+                },
+                {
+                    "translation": [0,0,-17],
+                    "children": "tree"
+                },
+                {
+                    "translation": [24,0,-26],
+                    "children": "tree"
+                },
+                {
+                    "translation": [13,0,-10],
+                    "children": "tree"
+                },
+                {
+                    "translation": [4,0,14],
+                    "children": "tree"
+                }]
+            }, 
+            {
+                "translation": [0, 10.75, -7],
+                "children": "bunny"
+            },
+            {
+                "translation": [-50, 0, 0],
+                "children": "street"
+            },
+            {
+                "translation":[-50, 3, -5],
+                "rotation-y": 30,
+                "children": "fire-man-car"
+            },
+            {
+                "translation": [0, 2.4, 0],
+                "children": "destroyed-building"
             }
         ]
     },
@@ -167,7 +211,398 @@
             "scale": [0.2, 1, 0.2],
             "color": "grey",
             "primitive": "cube"
+        },
+
+        "street": {
+            "children": {
+                "color": "black",
+                "scale": [18, 0.1, 150],
+                "primitive": "cube"
+            }
+        },
+
+        "street-strips": {
+            "translation": [0, 0.01, -74],
+            "scale": [1, 0.1, 2],
+            "color": "white",
+            "primitive": "cube"
+        },
+
+        "tree": {
+            "translation": [0, 2.25, 0],
+            "scale": [1, 5, 1],
+            "children": [
+                {
+                    "primitive": "cylinder",
+                    "color": "dark-brown"
+                },
+                {
+                    "translation": [0, 0.8, 0],
+                    "color": "green",
+                    "scale": [2.5, 1, 2.5],
+                    "primitive": "pyramid"
+                },
+                {
+                    "translation": [0, 0.8, 0],
+                    "rotation-y": 45,
+                    "scale": [2.5, 1, 2.5],
+                    "color": "dark-green",
+                    "primitive": "pyramid"
+                }
+            ]
+        },
+
+        "bunny": {
+            "scale": [0.05, 0.05, 0.05],
+            "children": [
+                {
+                    "translation": [-30, 4, 20],
+                    "scale": [300, 300, 300],
+                    "primitive": "bunny"
+                },
+                {
+                    "translation": [-56, 15, 27],
+                    "children": "eye"
+                },
+                {
+                    "translation": [-48, 15, 29],
+                    "rotation-y": 90,
+                    "children": "eye"
+                }
+            ]
+        },
+         "eye": {
+            "children": [
+                {
+                    "scale": [5, 5, 5],
+                    "color": "white",
+                    "primitive": "sphere"
+                },
+                {
+                    "translation": [-2.1, 0, 1],
+                    "color": "black",
+                    "primitive": "sphere"
+                }
+
+            ]
+        },
+        "fire-man-car":{
+            "children":[
+                "car-body",
+                "car-hose",
+                {
+                    "translation": [0, 2.6, 1],
+                    "children": "car-sirens"
+                }
+            ]
+        },
+
+        "car-body":{
+            "children": [
+                {
+                    "scale": [5, 5, 10],
+                    "primitive": "cube",
+                    "color": "red"
+                },
+                {
+                    "translation": [0, 1, 3.5],
+                    "scale": [5.05, 3.05, 3.05],
+                    "primitive": "cube",
+                    "color": "grey"
+                },
+                {
+                    "scale": [4.9, 1, 3],
+                    "translation": [0, -1, 3.7],
+                    "primitive": "cube",
+                    "color": "white"
+                },
+                {
+                    "translation": [0, -2, 3],
+                    "children": "car-wheel-pairs"
+                },
+                {
+                    "translation": [0, -2, -3],
+                    "children": "car-wheel-pairs"
+                }
+            ]
+        },
+
+        "car-hose": {
+            "children": [
+                {
+                    "translation": [0,3,-3],
+                    "primitive": "cube",
+                    "color": "white"
+                },
+
+                {
+                    "translation": [1,4,0.5],
+                    "rotation-y": 20,
+                    "scale": [1,1,8],
+                    "primitive": "cube",
+                    "color": "white"
+                }
+            ]
+        },
+
+        "car-sirens": {
+            "children": [
+                {
+                    "primitive": "sphere",
+                    "color": "grey"
+                },
+                {
+                    "translation": [-0.1,0,0],
+                    "primitive": "sphere",
+                    "color": "yellow"
+                },
+
+                {
+                    "translation": [0.1,0,0],
+                    "primitive": "sphere",
+                    "color": "blue"
+                }
+            ]
+        },
+
+        "car-wheel-pairs": {
+            "children": [
+                {
+                    "translation": [-3, 0, 0],
+                    "children": "car-wheel"
+                },
+                {
+                    "translation": [3, 0, 0],
+                    "children": "car-wheel"
+                }
+            ]
+        },
+
+        "car-wheel":{
+            "rotation-z": 90,
+            "scale": [1.5,1.5,1.5],
+            "children":[
+                {
+                    "primitive": "torus",
+                    "color": "black"
+                },
+                {
+                    "scale": [1,0.5,1],
+                    "primitive": "sphere",
+                    "color": "grey"
+                }
+            ]
+        },
+
+        "destroyed-building": {
+            "children": [
+                "building-floor-1",
+                {
+                    "translation":[0,4,0],
+                    "children": "building-floor-2"
+                },
+                {
+                    "translation":[0,9,0],
+                    "children": "building-floor-3"
+                },
+                "debris"
+            ]
+        },
+
+        "building-floor-1": {
+            "translation": [0,-2,0],
+            "children": [
+                {
+	                "scale": [19.5,1,19.5],
+                    "children":"base-floor"
+                },
+                {
+                    "translation": [-10, 0, 0],
+                    "rotation-y": 10,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [0, 0, 10],
+                    "rotation-y": 25,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [-4, 0, 12],
+                    "rotation-y": 35,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [-8, 1, 8],
+                    "rotation-y": 12,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [-12, 0, 5],
+                    "rotation-y": 45,
+                    "children": "boulder"
+                }
+
+            ]
+        },
+
+        "building-floor-2": {
+            "children": [
+                {
+                    "name": "the-actual-floor",
+                    "translation": [0, -2, 0],
+                    "children": [
+                        {
+                            "translation": [5, 0, 0],
+                            "scale": [9.75, 1, 19.5],
+                            "children": "base-floor"
+                        },
+                        {
+                            "translation": [0, 0,-5],
+                            "rotation-y": 90,
+                            "scale": [9.75 , 1, 19.5],
+                            "children": "base-floor"
+                        },
+                        {
+                            "translation": [0, 0,0],
+                            "scale": [9.75 ,1 , 9.75],
+                            "children": "base-floor"
+                        }
+ 
+                    ]
+                },
+                {
+                    "name": "floor-debris",
+                    "translation": [0, -1, 0],
+                    "children": [
+                        {
+                            "translation": [-5, 0,-2],
+                            "rotation-y": 42,
+                            "children": "boulder"
+                        },
+                        {
+                            "translation": [3,0,-5],
+                            "rotation-y": 64,
+                            "children": "boulder"
+                        },
+                        {
+                            "translation": [5, 0, 2],
+                            "rotation-y": 75,
+                            "children": "boulder"
+                        }
+                    ]
+                }
+           ]
+        },
+
+        "building-floor-3": {
+            "translation": [0, -2, 0],
+            "children": [
+                {
+                    "translation": [5.5, 0, 0],
+                    "scale": [7.8, 1, 19.5],
+                    "children": "boulder"
+                },
+                {
+                    "translation": [0, 0, -5.5],
+                    "rotation-y": 90,
+                    "scale": [7.8, 1, 19.5],
+                    "children": "boulder"
+                },
+                {
+                    "translation": [2, 0, 0],
+                    "scale": [7.8 , 1, 7.8],
+                    "children": "boulder"
+                },
+                {
+                    "translation": [-2, 0, -3],
+                    "scale": [7.8, 1, 7.8],
+                    "children": "boulder"
+                }
+            ]
+        },
+
+        "base-floor": {
+            "color": "brown",
+            "primitive": "cube"
+        },
+
+        "debris": {
+            "children": [
+                {
+                    "translation": [2,8,-1],
+                    "rotation-y": 12,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [7,8,-7],
+                    "rotation-y": 3,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [3,8,-6],
+                    "rotation-y": 82,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [3,8,6],
+                    "rotation-y": 35,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [6,13,6],
+                    "rotation-y": 10,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [8,13,-8],
+                    "rotation-y": 42,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [7,13,-6],
+                    "rotation-y": 37,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [6,13,-7],
+                    "rotation-y": 72,
+                    "children": "boulder"
+                }
+            ]
+        },
+        "boulder": {
+            "children": [
+                {
+                    "primitive": "cube",
+                    "color": "grey"
+                },
+                {
+                    "translation": [-0.5,-0.25,0.5],
+                    "scale": [0.5,0.5,0.5],
+                    "primitive": "cube",
+                    "color": "grey"
+                },
+                {
+                    "translation": [0.5,-0.25,0.5],
+                    "scale": [0.4,0.4,0.5],
+                    "primitive": "cube",
+                    "color": "grey"
+                },
+                {
+                    "translation": [-0.4,-0.25,-0.4],
+                    "scale": [0.4,0.4,0.5],
+                    "primitive": "cube",
+                    "color": "grey"
+                },
+                {
+                    "translation": [0,-0.3,0],
+                    "scale": [1.5,0.3,1.5],
+                    "primitive": "cube",
+                    "color": "grey"
+                }
+            ]
         }
+       
     } 
 
 }

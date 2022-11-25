@@ -6,6 +6,8 @@ import * as SPHERE from '../libs/objects/sphere.js'
 import * as CUBE from '../libs/objects/cube.js';
 import * as CYLINDER from '../libs/objects/cylinder.js'
 import * as TORUS from '../libs/objects/torus.js'
+import * as PYRAMID from '../libs/objects/pyramid.js'
+import * as BUNNY from '../libs/objects/bunny.js'
 import * as dat from '../libs/dat.gui.module.js'
 
 /** @type WebGLRenderingContext */
@@ -24,10 +26,10 @@ const axono_pars = {
     gama: 15
 }
 
-const MAX_THETA = 90
+const MAX_THETA = 180
 const MAX_GAMA = 90
 
-const MIN_THETA = -90
+const MIN_THETA = -180
 const MIN_GAMA = -90
 
 // some default cameras
@@ -86,7 +88,9 @@ const primitives = {
     'sphere': SPHERE,
     'cube': CUBE,
     'cylinder': CYLINDER,
-    'torus': TORUS
+    'torus': TORUS,
+    'pyramid': PYRAMID,
+    'bunny': BUNNY
 }
 
 // IDEA: when we are not in the camera 1 we shouldn't be
@@ -110,17 +114,38 @@ function setupControllers(){
 }
 
 
+/**
+ * 
+ * @param {SceneGraph} sg 
+ */
+function complete_scene(sg){
+    const street = sg.getBaseNode('street')
+    for(let i = 0; i < 50; i++){
+        street.addChild(
+            sg.createNode({
+                translation: [0, 0, 3 * i],
+                children: "street-strips"
+            })
+        )
+    }
+
+}
 
 function setup([shaders, scene_desc])
 {
     let boxes = [] // an array of objects {node, life, velocity}
     const scene_graph = new SceneGraph(scene_desc, Object.keys(primitives))
+
+    complete_scene(scene_graph)
+
     const helicopter = scene_graph.findNode('helicopter')
     const tail_helices = scene_graph.findNode('helicopter/tail/tail-helices')
     const upper_helices = scene_graph.getBaseNode('upper-helices')
+    const car_sirens = scene_graph.getBaseNode('car-sirens')
 
     const heli_height = helicopter.addTransformation(new Translation([0, 0, 0]))
     const heli_forward = helicopter.addTransformation(new RotationY(0))
+    
 
     // the radius that the helicopter will be rotating
     const ROTATION_RADIUS = helicopter.translation[2]
@@ -141,7 +166,7 @@ function setup([shaders, scene_desc])
 
     mode = gl.TRIANGLES
 
-    for(let fig of [SPHERE, CUBE, CYLINDER, TORUS]) fig.init(gl)
+    for(let key in primitives) primitives[key].init(gl)
 
     resize_canvas()
     window.addEventListener("resize", resize_canvas);
@@ -358,6 +383,7 @@ function setup([shaders, scene_desc])
         heli_forward.value = h_angle
         helicopter.rotationZ = h_slope_angle
         heli_height.value = [0, h_height, 0]
+        car_sirens.rotationY = time * 600 // TODO: a constant
 
     }
 

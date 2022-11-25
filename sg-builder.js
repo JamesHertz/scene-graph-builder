@@ -342,8 +342,12 @@ const colors = {
     blue: vec3(0, 0, 1),
     grey: vec3(0.5, 0.5, 0.5),
     green: vec3(0, 1, 0),
+    brown: vec3(0.82, 0.71, 0.55),
+    black: vec3(0, 0, 0),
     white: vec3(1, 1, 1),
-    black: vec3(0, 0, 0)
+    'dark-green': vec3(0, 0.5, 0),
+    'light-grey': vec3(0.65, 0.65, 0.65),
+    'dark-brown': vec3(0.26, 0.15, 0),
 }
 
 const DEFAULT_COLOR = colors.white
