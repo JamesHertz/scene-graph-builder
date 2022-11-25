@@ -37,35 +37,34 @@
             },
             {
                 "name": "trees",
-                "children": [{
-                    "translation": [20,0,10],
-                    "children": "tree"
-                },
-                {
-                    "translation": [-10,0,-15],
-                    "children": "tree"
-                },
-                {
-                    "translation": [0,0,-17],
-                    "children": "tree"
-                },
-                {
-                    "translation": [24,0,-26],
-                    "children": "tree"
-                },
-                {
-                    "translation": [13,0,-10],
-                    "children": "tree"
-                },
-                {
-                    "translation": [4,0,14],
-                    "children": "tree"
-                }]
+                "children": [
+                    {
+                        "translation": [20,0,10],
+                        "children": "tree"
+                    },
+                    {
+                        "translation": [-10,0,-15],
+                        "children": "tree"
+                    },
+                    {
+                        "translation": [0,0,-17],
+                        "children": "tree"
+                    },
+                    {
+                        "translation": [24,0,-26],
+                        "children": "tree"
+                    },
+                    {
+                        "translation": [13,0,-10],
+                        "children": "tree"
+                    },
+                    {
+                        "translation": [4,0,14],
+                        "children": "tree"
+                    }
+                ]
             }, 
-            {
-                "translation": [0, 10.75, -7],
-                "children": "bunny"
-            },
+       
             {
                 "translation": [-50, 0, 0],
                 "children": "street"
@@ -286,6 +285,7 @@
 
             ]
         },
+
         "fire-man-car":{
             "children":[
                 "car-body",
@@ -396,26 +396,107 @@
 
         "destroyed-building": {
             "children": [
-                "building-floor-1",
+                {
+                    "children": [
+                        "building-floor-1",
+                        "floor-1-debris"
+                    ]
+                },
+
                 {
                     "translation":[0,4,0],
-                    "children": "building-floor-2"
+                    "children": [
+                        "building-floor-2",
+                        "floor-2-debris"
+                    ]
                 },
                 {
                     "translation":[0,9,0],
-                    "children": "building-floor-3"
+                    "children": [
+                        "building-floor-3",
+                        {
+                            "name": "in-danger-bunny",
+                            "translation": [0, -0.65, -7],
+                            "children": "bunny"
+                        },
+                        "floor-3-debris"
+                    ]
                 },
-                "debris"
+                {
+                    "translation": [0,15,0],
+                    "children": [
+                        "building-floor-4",
+                        "floor-4-debris"
+                    ]
+                },
+                {
+                    "translation": [-10,0,-5],
+                    "children": "building-wall-1"
+                },
+                {
+                    "translation": [10,0,0],
+                    "children": "building-wall-2"
+                },
+                {
+                    "translation": [5,0,9.5],
+                    "rotation-y": -90,
+                    "children": "building-wall-1"
+                },
+                {
+                    "translation": [0,0,-9.5],
+                    "rotation-y": 90,
+                    "children": "building-wall-2"
+                }
             ]
         },
 
-        "building-floor-1": {
-            "translation": [0,-2,0],
+        "building-wall-1": {
             "children": [
                 {
-	                "scale": [19.5,1,19.5],
-                    "children":"base-floor"
+                    "scale": [1,5,10],
+                    "children": "base-wall"
                 },
+                {
+                    "translation": [0,5,-1],
+                    "scale": [1,5,8],
+                    "children": "base-wall"
+                },
+                {
+                    "translation": [0,12.5,-2.5],
+                    "scale": [1,10,5],
+                    "children": "base-wall"
+                }
+            ]
+        },
+    
+        "building-wall-2": {
+            "children": [
+                {
+                    "scale": [1,5,20],
+                    "children": "base-wall"
+                },
+                {
+                    "translation": [0,12.5,0],
+                    "scale": [1,20,20],
+                    "children": "base-wall"
+                }
+            ]
+        },
+
+        "base-wall": {
+            "primitive": "cube",
+            "color": "grey"
+        },
+
+        "building-floor-1": {
+            "translation": [0,-2.5,0],
+            "scale": [19.5,0.25,19.5],
+            "children": "base-floor"
+        },
+
+        "floor-1-debris": {
+            "translation": [0,-2,0],
+            "children": [
                 {
                     "translation": [-10, 0, 0],
                     "rotation-y": 10,
@@ -432,7 +513,7 @@
                     "children": "boulder"
                 },
                 {
-                    "translation": [-8, 1, 8],
+                    "translation": [-8, 0, 8],
                     "rotation-y": 12,
                     "children": "boulder"
                 },
@@ -442,80 +523,158 @@
                     "children": "boulder"
                 }
 
-            ]
+                ]
+
         },
 
         "building-floor-2": {
+            "translation": [0, -2, 0],
             "children": [
                 {
-                    "name": "the-actual-floor",
-                    "translation": [0, -2, 0],
-                    "children": [
-                        {
-                            "translation": [5, 0, 0],
-                            "scale": [9.75, 1, 19.5],
-                            "children": "base-floor"
-                        },
-                        {
-                            "translation": [0, 0,-5],
-                            "rotation-y": 90,
-                            "scale": [9.75 , 1, 19.5],
-                            "children": "base-floor"
-                        },
-                        {
-                            "translation": [0, 0,0],
-                            "scale": [9.75 ,1 , 9.75],
-                            "children": "base-floor"
-                        }
- 
-                    ]
+                    "translation": [5, 0, 0],
+                    "scale": [9.75, 1, 19.5],
+                    "children": "base-floor"
                 },
                 {
-                    "name": "floor-debris",
-                    "translation": [0, -1, 0],
-                    "children": [
-                        {
-                            "translation": [-5, 0,-2],
-                            "rotation-y": 42,
-                            "children": "boulder"
-                        },
-                        {
-                            "translation": [3,0,-5],
-                            "rotation-y": 64,
-                            "children": "boulder"
-                        },
-                        {
-                            "translation": [5, 0, 2],
-                            "rotation-y": 75,
-                            "children": "boulder"
-                        }
-                    ]
+                    "translation": [0, 0,-5],
+                    "rotation-y": 90,
+                    "scale": [9.75 , 1, 19.5],
+                    "children": "base-floor"
+                },
+                {
+                    "translation": [0, 0,0],
+                    "scale": [9.75 ,1 , 9.75],
+                    "children": "base-floor"
                 }
+
            ]
+        },
+
+        "floor-2-debris": {
+            "translation": [0, -1, 0],
+            "children": [
+                {
+                    "translation": [-5, 0,-2],
+                    "rotation-y": 42,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [3,0,-5],
+                    "rotation-y": 64,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [5, 0, 2],
+                    "rotation-y": 75,
+                    "children": "boulder"
+                }
+            ]
+
         },
 
         "building-floor-3": {
             "translation": [0, -2, 0],
             "children": [
-                {
-                    "translation": [5.5, 0, 0],
+
+                { "translation": [5.5, 0, 0],
                     "scale": [7.8, 1, 19.5],
-                    "children": "boulder"
+                    "children": "base-floor"
                 },
                 {
                     "translation": [0, 0, -5.5],
                     "rotation-y": 90,
                     "scale": [7.8, 1, 19.5],
-                    "children": "boulder"
+                    "children": "base-floor"
                 },
                 {
                     "translation": [2, 0, 0],
                     "scale": [7.8 , 1, 7.8],
-                    "children": "boulder"
+                    "children": "base-floor"
                 },
                 {
                     "translation": [-2, 0, -3],
                     "scale": [7.8, 1, 7.8],
+                    "children": "base-floor"
+                }
+
+           ]
+        },
+
+        "floor-3-debris": {
+            "translation": [0, -1, 0],
+            "children": [
+                {
+                    "translation": [2, 0, -1],
+                    "rotation-y": 12,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [7, 0,-7],
+                    "rotation-y": 3,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [3, 0, -6],
+                    "rotation-y": 82,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [3, 0, 6],
+                    "rotation-y": 35,
+                    "children": "boulder"
+                }
+            ]
+
+        },
+
+        "building-floor-4": {
+            "translation": [0, -3, 0],
+            "children": [
+                {
+                    "translation": [7.5, 0, 0],
+                    "scale": [4.875, 1, 19.5],
+                    "primitive": "cube",
+                    "color": "brown"
+                },
+                {
+                    "translation": [0, 0, -7.5],
+                    "rotation-y": 90,
+                    "scale": [4.875, 1, 19.5],
+                    "primitive": "cube",
+                    "color": "brown"
+                },
+                {
+                    "translation": [3.5, 0, -1],
+                    "scale": [4.875, 1, 9.75],
+                    "primitive": "cube",
+                    "color": "brown"
+                }
+
+           ]
+        
+        },
+
+        "floor-4-debris": {
+            "translation": [0, -2, 0],
+            "children": [
+                {
+                    "translation": [6, 0, 6],
+                    "rotation-y": 10,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [8, 0, -8],
+                    "rotation-y": 42,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [7, 0, -6],
+                    "rotation-y": 37,
+                    "children": "boulder"
+                },
+                {
+                    "translation": [6, 0, -7],
+                    "rotation-y": 72,
                     "children": "boulder"
                 }
             ]
@@ -526,50 +685,6 @@
             "primitive": "cube"
         },
 
-        "debris": {
-            "children": [
-                {
-                    "translation": [2,8,-1],
-                    "rotation-y": 12,
-                    "children": "boulder"
-                },
-                {
-                    "translation": [7,8,-7],
-                    "rotation-y": 3,
-                    "children": "boulder"
-                },
-                {
-                    "translation": [3,8,-6],
-                    "rotation-y": 82,
-                    "children": "boulder"
-                },
-                {
-                    "translation": [3,8,6],
-                    "rotation-y": 35,
-                    "children": "boulder"
-                },
-                {
-                    "translation": [6,13,6],
-                    "rotation-y": 10,
-                    "children": "boulder"
-                },
-                {
-                    "translation": [8,13,-8],
-                    "rotation-y": 42,
-                    "children": "boulder"
-                },
-                {
-                    "translation": [7,13,-6],
-                    "rotation-y": 37,
-                    "children": "boulder"
-                },
-                {
-                    "translation": [6,13,-7],
-                    "rotation-y": 72,
-                    "children": "boulder"
-                }
-            ]
-        },
         "boulder": {
             "children": [
                 {
