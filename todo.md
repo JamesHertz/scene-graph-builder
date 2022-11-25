@@ -9,4 +9,4 @@
 - [ ] change the name theta and gama to their respective symbols
 - [X] change the ortho when using top camera or the follow one
 - [ ] try to make the set Rotation more efficient
-- [ ] implement the box thing  
+- [X] implement the box thing  

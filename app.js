@@ -178,9 +178,6 @@ function setup([shaders, scene_desc])
 
     setupControllers()
    
-    // this is to prevent the camera to change when
-    // you are typing the angle on the dat.gui input box.
-
     window.addEventListener('keydown', e => {
         switch(e.key){
             case '1':
@@ -206,7 +203,7 @@ function setup([shaders, scene_desc])
                 mode = gl.TRIANGLES
                 break
 
-            case ' ':
+            case ' ': // space
                 // get the intial velocity
                 if(h_height > MIN_DROPPING_HEIGHT)
                     boxes.push(createBox())
@@ -248,7 +245,7 @@ function setup([shaders, scene_desc])
             vec4(0, -BOX_SIZE, 0, 1) 
         )
 
-        const angle_speed = -ROTATION_RADIUS * h_forward_speed/180 * Math.PI
+        const angular_speed = -ROTATION_RADIUS * h_forward_speed/180 * Math.PI
 
         const velocity_vector = subtract(
             mult(helicopter.modelMatrix, vec4(1, 0, 0, 1)),
@@ -256,7 +253,7 @@ function setup([shaders, scene_desc])
         )
 
         const velocity = vec3(
-            scale(BOX_SPEED_FACTOR * angle_speed, velocity_vector)
+            scale(BOX_SPEED_FACTOR * angular_speed, velocity_vector)
         )
 
         velocity[1] = 0 // we don't want it's y coordinates
@@ -292,7 +289,7 @@ function setup([shaders, scene_desc])
 
         // upload color
         gl.uniform3fv(gl.getUniformLocation(program, "uColor"), color)
-        // upload model matrix
+        // upload modelView matrix
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelViewMatrix));
         // upload normal matrix 
         gl.uniformMatrix3fv(gl.getUniformLocation(program, "mNormal"), false, flatten(mNormal));
@@ -334,7 +331,7 @@ function setup([shaders, scene_desc])
                 scene_graph.root.removeChild(b.node)
             else{
                 rem_boxes.push(b)
-                // if helicopter is in the ground
+                // if helicopter is not in the ground
                 if(b.velocity != null){
                     b.velocity[1] += BOX_GRAV_CONSTANT * delta_time
                     let position = b.node.translation
@@ -352,6 +349,7 @@ function setup([shaders, scene_desc])
     }
 
 
+    // TODO: add constants
     function evolve_scene(delta_time){
 
         const helices_rotation_angle = (h_height > MIN_HEIGHT) ? time * 2 * Math.PI * 100 : 0
@@ -360,12 +358,13 @@ function setup([shaders, scene_desc])
         if(pressed_keys.ArrowLeft && h_height > MIN_FLY_HEIGHT){
             h_forward_speed = Math.max(h_forward_speed - delta_time * 200,  MAX_SPEED)
         }
+
         if(h_forward_speed){
             h_forward_speed = Math.min(0, h_forward_speed + delta_time * 60)
             h_angle += h_forward_speed * delta_time
         }
 
-        const h_slope_angle = h_forward_speed/MAX_SPEED * 30
+        const h_slope_angle = h_forward_speed/MAX_SPEED * MAX_SLOPE_ANGLE
 
         // updates the height
         if(pressed_keys.ArrowUp) {
