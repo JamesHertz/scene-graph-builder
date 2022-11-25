@@ -128,6 +128,27 @@ function complete_scene(sg){
         )
     }
 
+    const ladder = sg.getBaseNode("ladder")
+    for(let i = 0; i < 9; i++){
+        ladder.addChild(
+            sg.createNode({
+                translation: [0, i, 0],
+                children: "ladder-rung"
+            })
+        )
+    }
+
+    /*
+        for(let n = 0; n < 9; n++){
+            pushMatrix()
+                multTranslation([0,-4 + n,0])
+                multRotationX(90)
+                multScale([0.2,1.1,0.2])
+                draw(CYLINDER,colors.brown)
+            popMatrix()
+        }
+    */
+
 }
 
 function setup([shaders, scene_desc])

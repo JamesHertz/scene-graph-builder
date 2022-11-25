@@ -77,6 +77,11 @@
             {
                 "translation": [0, 2.4, 0],
                 "children": "destroyed-building"
+            },
+            {
+                "translation": [-13, 4.25, -4],
+                "rotation-z": -30,
+                "children": "ladder"
             }
         ]
     },
@@ -446,6 +451,12 @@
                     "translation": [0,0,-9.5],
                     "rotation-y": 90,
                     "children": "building-wall-2"
+                },
+                {
+                    "translation": [0, -0.5, 12],
+                    "rotation-x": -30,
+                    "rotation-y": -45,
+                    "children": "door"
                 }
             ]
         },
@@ -714,6 +725,69 @@
                 }
             ]
         },
+
+        "door": {
+            "scale": [4,5,0.3],
+            "children": [
+                {
+                    "primitive": "cube",
+                    "color": "brown"
+                },
+
+                {
+                    "translation": [0.4,0,1],
+                    "scale": [0.1,0.1,1],
+                    "primitive": "sphere",
+                    "color": "grey"
+                },
+                {
+                    "translation": [0.2,0.25,1],
+                    "children": "door-part"
+                },
+                {
+                    "translation": [-0.2,0.25,1],
+                    "children": "door-part"
+                },
+                {
+                    "translation": [0.2,-0.25,1],
+                    "children": "door-part"
+                },
+                {
+                    "translation": [-0.2,-0.25,1],
+                    "children": "door-part"
+                }
+            ]
+        },
+
+        "door-part": {
+            "scale": [0.2,0.35,0.3],
+            "primitive": "cube",
+            "color": "dark-brown"
+        },
+
+        "ladder": {
+            "children": [
+                {
+                    "translation": [0, 0, -0.5],
+                    "scale": [0.2, 10, 0.2],
+                    "primitive": "cylinder"
+                },
+                {
+                    "translation": [0, 0, 0.5],
+                    "scale": [0.2, 10, 0.2],
+                    "primitive": "cylinder"
+                }
+            ]
+        },
+
+        "ladder-rung": {
+            "translation": [0, -4, 0],
+            "scale": [0.2, 1.1, 0.2],
+            "rotation-x": 90,
+            "color": "brown",
+            "primitive": "cylinder"
+        },
+
         "medic-kit":{
             "children":[
                 {
@@ -750,19 +824,16 @@
         "cruz":{
             "children":[
                 {
-                    
                     "scale":[0.1,0.4,0.4],
                     "color": "red",
                     "primitive": "sphere"
                 },
                 {
-                    
                     "scale":[0.1,0.1,0.3],
                     "color": "white",
                     "primitive": "cube"
                 },
                 {
-                    
                     "scale":[0.1,0.3,0.1],
                     "color": "white",
                     "primitive": "cube"
