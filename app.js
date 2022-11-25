@@ -45,7 +45,7 @@ const BOX_LIFE = 5 // seconds
 const BOX_HALF_SIZE = BOX_SIZE /2
 const BOX_GRAV_CONSTANT = -98 
 // the portion of the helicopeter speed the box will take 
-const BOX_SPEED_FACTOR = 0.4 
+const BOX_SPEED_FACTOR = 0.5 
 
 const box_node = {
     scale: [BOX_SIZE, BOX_SIZE, BOX_SIZE],

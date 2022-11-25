@@ -251,42 +251,7 @@
             ]
         },
 
-        "bunny": {
-            "scale": [0.05, 0.05, 0.05],
-            "children": [
-                {
-                    "translation": [-30, 4, 20],
-                    "scale": [300, 300, 300],
-                    "primitive": "bunny"
-                },
-                {
-                    "translation": [-56, 15, 27],
-                    "children": "eye"
-                },
-                {
-                    "translation": [-48, 15, 29],
-                    "rotation-y": 90,
-                    "children": "eye"
-                }
-            ]
-        },
-         "eye": {
-            "children": [
-                {
-                    "scale": [5, 5, 5],
-                    "color": "white",
-                    "primitive": "sphere"
-                },
-                {
-                    "translation": [-2.1, 0, 1],
-                    "color": "black",
-                    "primitive": "sphere"
-                }
-
-            ]
-        },
-
-        "fire-man-car":{
+          "fire-man-car":{
             "children":[
                 "car-body",
                 "car-hose",
@@ -522,8 +487,7 @@
                     "rotation-y": 45,
                     "children": "boulder"
                 }
-
-                ]
+	        ]
 
         },
 
@@ -598,6 +562,42 @@
                 }
 
            ]
+        },
+
+      	"bunny": {
+            "scale": [0.05, 0.05, 0.05],
+            "children": [
+                {
+                    "translation": [-30, 4, 20],
+                    "scale": [300, 300, 300],
+                    "primitive": "bunny"
+                },
+                {
+                    "translation": [-56, 15, 27],
+                    "children": "eye"
+                },
+                {
+                    "translation": [-48, 15, 29],
+                    "rotation-y": 90,
+                    "children": "eye"
+                }
+            ]
+        },
+
+        "eye": {
+            "children": [
+                {
+                    "scale": [5, 5, 5],
+                    "color": "white",
+                    "primitive": "sphere"
+                },
+                {
+                    "translation": [-2.1, 0, 1],
+                    "color": "black",
+                    "primitive": "sphere"
+                }
+
+            ]
         },
 
         "floor-3-debris": {
