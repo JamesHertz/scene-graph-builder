@@ -19,54 +19,40 @@ let last_time = undefined
 
 let time = 0;
 
-
-// constants related to axonometric camera
-const axono_pars = {
-    theta: 60,
-    gama: 15
-}
-
-const follow_pars = {
-    distance: 10
-}
-
-const free_pars = {
-    ...axono_pars,
-    distance: 100
-}
-
-const axono_gui = {
+const axonoController = {
     topic: "axono parameters",
-    container: axono_pars,
     pars: [
-        {name: 'theta', MIN: -180, MAX: 180},
-        {name: 'gama', MIN: -90, MAX: 90}
-    ]
+        {name: 'theta', MIN: -180, MAX: 180, DEFAULT: 60},
+        {name: 'gama', MIN: -90, MAX: 90, DEFAULT: 15}
+    ],
 }
 
-const follow_gui = {
+const followCamController = {
     topic: "follow camera parameters",
-    container: follow_pars,
     pars: [
         {name: 'distance', MIN: 10, MAX: 20}
-    ]
+    ],
 }
 
-const free_gui = {
+// uses to change it's value and sync those with the 
+// gui
+// look at this later ....
+const freeCamController  = {
     topic: "free cam parameters",
-    container: free_pars,
     pars: [
-        {name: 'theta', MIN: -180, MAX: 180},
-        {name: 'gama', MIN: 0, MAX: 90},
-        {name: 'distance', MIN: 25, MAX: 200}
-    ]
+        {name: 'theta', MIN: -180, MAX: 180, DEFAULT: 50}, 
+        {name: 'gama', MIN: 0, MAX: 90, DEFAULT: 25},
+        {name: 'distance', MIN: 25, MAX: 150, DEFAULT: 80},
+        {name: "sensibility", MIN: 5, MAX: 10}
+    ],
 }
 
 const gui_controllers = [
-    axono_gui,
-    follow_gui,
-    free_gui
+    followCamController,
+    axonoController,
+    freeCamController
 ]
+
 // some default cameras
 const basic_cameras = {
     front: lookAt([0, 0, 100], [0, 0, 0], [0,1,0]), 
@@ -119,28 +105,44 @@ const primitives = {
     'bunny': BUNNY
 }
 
+
 // IDEA: when we are not in the camera 1 we shouldn't be
 // able to these parameters
 // TODO: use the .hide() to do this effect :)
 function setupControllers(){
     const gui = new dat.GUI({name: 'parameters'})
 
-    for(let {topic, container, pars} of gui_controllers){
+    for(let controller of gui_controllers){
+        const {topic, pars} = controller
+
+        const container = {}
+        const slides = {} // will store the slide for each one of the parameter
         const folder = gui.addFolder(topic)
 
-        for(let {name, MAX, MIN} of pars)
-            folder.add(container, name,  MIN, MAX)
+        for(let {name, MAX, MIN, DEFAULT} of pars){
+            container[name] = (DEFAULT === undefined) ? MIN : DEFAULT
+            slides[name] = folder.add(container, name,  MIN, MAX)
+        }
 
         folder.open()
+
+        controller.container = container
+        controller.folder = folder
+        controller.slides = slides
     }
 
     gui.open()
 
+
     // to prevent unwanted results
     // For example if we are chaging the game or the beta using the keyboard
     // we surely don't want it to change the camera to front, up or right
-    gui.domElement.addEventListener('keydown', e => e.stopPropagation())
-    gui.domElement.addEventListener('keyup', e => e.stopPropagation())
+    for(let event of ['keydown', 'keyup']){
+
+        gui.domElement.addEventListener(event, e => {
+            e.stopPropagation()
+        })
+    }
 }
 
 
@@ -195,14 +197,17 @@ function setup([shaders, scene_desc])
     let aspect = canvas.width / canvas.height;
 
     gl = setupWebGL(canvas);
+    setupControllers()
 
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
 
-    let Mview = getAxonoMatrix()
-
+    let Mview; 
     let mProjection;
+    let mProjFunc;
 
-    let mProjFunc = defaultMProjection 
+    setMview(getAxonoMatrix())
+
+
 
     mode = gl.TRIANGLES
 
@@ -216,7 +221,6 @@ function setup([shaders, scene_desc])
     
     window.requestAnimationFrame(render);
 
-    setupControllers()
    
     window.addEventListener('keydown', e => {
         switch(e.key){
@@ -264,7 +268,9 @@ function setup([shaders, scene_desc])
             pressed_keys[e.key] = false
     })
 
-    window.addEventListener("mousedown", e => {
+    canvas.addEventListener("mousedown", e => {
+        if(!Mview.freeCam) return 
+
         let oldX = e.screenX
         let oldY = e.screenY
         
@@ -278,11 +284,16 @@ function setup([shaders, scene_desc])
             let dx = oldX - event.screenX
             let dy = oldY - event.screenY
 
-            // TODO: constraint about the borders:
-            // TODO: a slice for this
-            const SENSIBILITY = 5
-            free_pars.theta -= dx/SENSIBILITY
-            free_pars.gama -= dy/SENSIBILITY
+            const {slides, container}  = freeCamController
+            const {sensibility} = container
+
+            slides.theta.setValue(
+                container.theta - dx/sensibility
+            )
+
+            slides.gama.setValue(
+                container.gama - dy/sensibility
+            )
 
             oldX = event.screenX
             oldY = event.screenY
@@ -292,10 +303,14 @@ function setup([shaders, scene_desc])
     })
 
     window.addEventListener("wheel", e => {
-        if(Mview.freeCam){
-            free_pars.distance += e.deltaY/20 // TODO: constant, it's the sensibility
-            // do the wonderful thing :)
+        if(Mview.freeCam || Mview.follow){
+            let controller = Mview.freeCam ? freeCamController : followCamController
+            const {container, slides} = controller
+            slides.distance.setValue(
+                container.distance + e.deltaY/20
+            )
         }
+
     })
 
     function resize_canvas(event)
@@ -308,12 +323,29 @@ function setup([shaders, scene_desc])
         gl.viewport(0,0,canvas.width, canvas.height);
     }
 
+    function getSelCamFolder(){
+        let selected = null
+        if(Mview.axono) selected = axonoController
+        else if(Mview.follow) selected = followCamController 
+        else if(Mview.freeCam) selected = freeCamController
+
+        return (selected) ? selected.folder : null
+    }
+
     function setMview(newMview, newMProjFunc=defaultMProjection){
         Mview = newMview
         if(newMProjFunc != mProjFunc){
             mProjFunc = newMProjFunc
             mProjection = mProjFunc()
         }
+        // do fun stuffs here
+        // folders
+        const selFolder = getSelCamFolder()
+
+        for(let {folder} of gui_controllers)
+            folder.hide()
+
+        if(selFolder) selFolder.show()
     }
 
     function createBox(){
@@ -357,7 +389,7 @@ function setup([shaders, scene_desc])
     }
 
     function followCameraMProjection(){
-        return perspective(80, aspect, 5, 200) 
+        return perspective(80, aspect, 5, 300) 
     }
 
 
@@ -378,7 +410,7 @@ function setup([shaders, scene_desc])
     }
 
     function getFreeCamMatrix(){
-        const {theta, gama, distance} = free_pars
+        const {theta, gama, distance} = freeCamController.container 
         const result = mult( 
             lookAt([0, 0, distance], [0, 0, 0], [0, 1, 0]),
             mult( rotateX(gama), rotateY(theta) )
@@ -388,7 +420,7 @@ function setup([shaders, scene_desc])
     }
 
     function getAxonoMatrix(){
-        const {theta, gama} = axono_pars
+        const {theta, gama} = axonoController.container 
         const result = mult( 
             basic_cameras.front,
             mult( rotateX(gama), rotateY(theta) )
@@ -398,7 +430,7 @@ function setup([shaders, scene_desc])
     }
 
     function getFollowMatrix(){
-        const {distance} = follow_pars
+        const {distance} = followCamController.container
         const heliModel = helicopter.modelMatrix
         const eye = vec3(mult(heliModel, vec4(-distance, 0, 0, 1)))
         const at =  vec3(mult(heliModel, vec4(0, 0, 0, 1)))
