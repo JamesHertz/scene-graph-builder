@@ -49,8 +49,7 @@ const BOX_SPEED_FACTOR = 0.5
 
 const box_node = {
     scale: [BOX_SIZE, BOX_SIZE, BOX_SIZE],
-    color: 'blue',
-    primitive: 'cube'
+    children: "medic-kit"
 }
 
 // some constants related to the helicopter

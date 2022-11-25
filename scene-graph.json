@@ -140,7 +140,7 @@
                 }, 
                 {
                     "name": "tail-helices",
-                    "translation": [-2.25, 0.4, 0.1],
+                    "translation": [-2.25, 0.4, -0.1],
                     "children": [
                             {
                                 "name": "tail-helice-junction",
@@ -251,7 +251,42 @@
             ]
         },
 
-          "fire-man-car":{
+        "bunny": {
+            "scale": [0.05, 0.05, 0.05],
+            "children": [
+                {
+                    "translation": [-30, 4, 20],
+                    "scale": [300, 300, 300],
+                    "primitive": "bunny"
+                },
+                {
+                    "translation": [-56, 15, 27],
+                    "children": "eye"
+                },
+                {
+                    "translation": [-48, 15, 29],
+                    "rotation-y": 90,
+                    "children": "eye"
+                }
+            ]
+        },
+         "eye": {
+            "children": [
+                {
+                    "scale": [5, 5, 5],
+                    "color": "white",
+                    "primitive": "sphere"
+                },
+                {
+                    "translation": [-2.1, 0, 1],
+                    "color": "black",
+                    "primitive": "sphere"
+                }
+
+            ]
+        },
+
+        "fire-man-car":{
             "children":[
                 "car-body",
                 "car-hose",
@@ -487,7 +522,8 @@
                     "rotation-y": 45,
                     "children": "boulder"
                 }
-	        ]
+
+                ]
 
         },
 
@@ -564,42 +600,6 @@
            ]
         },
 
-      	"bunny": {
-            "scale": [0.05, 0.05, 0.05],
-            "children": [
-                {
-                    "translation": [-30, 4, 20],
-                    "scale": [300, 300, 300],
-                    "primitive": "bunny"
-                },
-                {
-                    "translation": [-56, 15, 27],
-                    "children": "eye"
-                },
-                {
-                    "translation": [-48, 15, 29],
-                    "rotation-y": 90,
-                    "children": "eye"
-                }
-            ]
-        },
-
-        "eye": {
-            "children": [
-                {
-                    "scale": [5, 5, 5],
-                    "color": "white",
-                    "primitive": "sphere"
-                },
-                {
-                    "translation": [-2.1, 0, 1],
-                    "color": "black",
-                    "primitive": "sphere"
-                }
-
-            ]
-        },
-
         "floor-3-debris": {
             "translation": [0, -1, 0],
             "children": [
@@ -633,21 +633,18 @@
                 {
                     "translation": [7.5, 0, 0],
                     "scale": [4.875, 1, 19.5],
-                    "primitive": "cube",
-                    "color": "brown"
+                    "children": "base-floor"
                 },
                 {
                     "translation": [0, 0, -7.5],
                     "rotation-y": 90,
                     "scale": [4.875, 1, 19.5],
-                    "primitive": "cube",
-                    "color": "brown"
+                    "children": "base-floor"
                 },
                 {
                     "translation": [3.5, 0, -1],
                     "scale": [4.875, 1, 9.75],
-                    "primitive": "cube",
-                    "color": "brown"
+                    "children": "base-floor"
                 }
 
            ]
@@ -714,6 +711,61 @@
                     "scale": [1.5,0.3,1.5],
                     "primitive": "cube",
                     "color": "grey"
+                }
+            ]
+        },
+        "medic-kit":{
+            "children":[
+                {
+                    "color": "white",
+                    "primitive": "cube"
+                },
+                {
+                    "translation":[0,0.5,0],
+                    "scale":[0.4,0.4,0.4],
+                    "rotation-z":90,
+                    "color": "red",
+                    "primitive": "torus"
+                },
+                {
+                    "translation":[-0.5,-0.2,0],
+                    "children": "cruz"
+                },
+                {
+                    "translation":[-0.5,0.3,0],
+                    "scale":[0.1,0.3,0.1],
+                    "color": "grey",
+                    "primitive": "cube"
+                },
+                {
+                    "translation":[0,0.3,0],
+                    "scale":[1.05,0.05,1.05],
+                    "color": "black",
+                    "primitive": "cube"
+                }
+        ]
+
+        }
+        ,
+        "cruz":{
+            "children":[
+                {
+                    
+                    "scale":[0.1,0.4,0.4],
+                    "color": "red",
+                    "primitive": "sphere"
+                },
+                {
+                    
+                    "scale":[0.1,0.1,0.3],
+                    "color": "white",
+                    "primitive": "cube"
+                },
+                {
+                    
+                    "scale":[0.1,0.3,0.1],
+                    "color": "white",
+                    "primitive": "cube"
                 }
             ]
         }
