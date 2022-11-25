@@ -26,12 +26,47 @@ const axono_pars = {
     gama: 15
 }
 
-const MAX_THETA = 180
-const MAX_GAMA = 90
+const follow_pars = {
+    distance: 10
+}
 
-const MIN_THETA = -180
-const MIN_GAMA = -90
+const free_pars = {
+    ...axono_pars,
+    distance: 100
+}
 
+const axono_gui = {
+    topic: "axono parameters",
+    container: axono_pars,
+    pars: [
+        {name: 'theta', MIN: -180, MAX: 180},
+        {name: 'gama', MIN: -90, MAX: 90}
+    ]
+}
+
+const follow_gui = {
+    topic: "follow camera parameters",
+    container: follow_pars,
+    pars: [
+        {name: 'distance', MIN: 10, MAX: 20}
+    ]
+}
+
+const free_gui = {
+    topic: "free cam parameters",
+    container: free_pars,
+    pars: [
+        {name: 'theta', MIN: -180, MAX: 180},
+        {name: 'gama', MIN: 0, MAX: 90},
+        {name: 'distance', MIN: 25, MAX: 200}
+    ]
+}
+
+const gui_controllers = [
+    axono_gui,
+    follow_gui,
+    free_gui
+]
 // some default cameras
 const basic_cameras = {
     front: lookAt([0, 0, 100], [0, 0, 0], [0,1,0]), 
@@ -66,14 +101,6 @@ let h_height = MIN_HEIGHT
 let h_angle = 0
 let h_forward_speed = 0
 
-// follwing camera constants
-const F_MAX_DISTANCE = 20
-const F_MIN_DISTANCE = 10
-
-const following_camera_pars = {
-    distance: F_MIN_DISTANCE
-}
-
 // related to forward 
 const pressed_keys = {
     ArrowUp: false,
@@ -94,16 +121,20 @@ const primitives = {
 
 // IDEA: when we are not in the camera 1 we shouldn't be
 // able to these parameters
+// TODO: use the .hide() to do this effect :)
 function setupControllers(){
     const gui = new dat.GUI({name: 'parameters'})
-    const folder = gui.addFolder('axonometric parameters')
-    folder.add(axono_pars, 'gama', MIN_GAMA, MAX_GAMA)
-    folder.add(axono_pars, 'theta', MIN_THETA, MAX_THETA)
 
-    const folder2 = gui.addFolder('following camera parameters')
-    folder2.add(following_camera_pars, 'distance', F_MIN_DISTANCE, F_MAX_DISTANCE)
+    for(let {topic, container, pars} of gui_controllers){
+        const folder = gui.addFolder(topic)
 
-    for(let obj of [gui, folder, folder2]) obj.open()
+        for(let {name, MAX, MIN} of pars)
+            folder.add(container, name,  MIN, MAX)
+
+        folder.open()
+    }
+
+    gui.open()
 
     // to prevent unwanted results
     // For example if we are chaging the game or the beta using the keyboard
@@ -137,17 +168,6 @@ function complete_scene(sg){
             })
         )
     }
-
-    /*
-        for(let n = 0; n < 9; n++){
-            pushMatrix()
-                multTranslation([0,-4 + n,0])
-                multRotationX(90)
-                multScale([0.2,1.1,0.2])
-                draw(CYLINDER,colors.brown)
-            popMatrix()
-        }
-    */
 
 }
 
@@ -200,6 +220,9 @@ function setup([shaders, scene_desc])
    
     window.addEventListener('keydown', e => {
         switch(e.key){
+            case '0':
+                setMview(getFreeCamMatrix(), followCameraMProjection)
+                break
             case '1':
                 setMview(getAxonoMatrix())
                 break
@@ -239,6 +262,40 @@ function setup([shaders, scene_desc])
     window.addEventListener('keyup', e => {
         if(e.key in pressed_keys)
             pressed_keys[e.key] = false
+    })
+
+    window.addEventListener("mousedown", e => {
+        let oldX = e.screenX
+        let oldY = e.screenY
+        
+        function update_pars(event){
+            // check if still pressed if not return
+            if(event.buttons == 0){
+                window.removeEventListener('mousemove', update_pars)
+                return 
+            }
+
+            let dx = oldX - event.screenX
+            let dy = oldY - event.screenY
+
+            // TODO: constraint about the borders:
+            // TODO: a slice for this
+            const SENSIBILITY = 5
+            free_pars.theta -= dx/SENSIBILITY
+            free_pars.gama -= dy/SENSIBILITY
+
+            oldX = event.screenX
+            oldY = event.screenY
+        }
+
+        window.addEventListener('mousemove', update_pars)
+    })
+
+    window.addEventListener("wheel", e => {
+        if(Mview.freeCam){
+            free_pars.distance += e.deltaY/20 // TODO: constant, it's the sensibility
+            // do the wonderful thing :)
+        }
     })
 
     function resize_canvas(event)
@@ -298,6 +355,7 @@ function setup([shaders, scene_desc])
     function topCameraMProjection(){
         return ortho(-50 * aspect, 50 * aspect, -50, 50, 1, 400) 
     }
+
     function followCameraMProjection(){
         return perspective(80, aspect, 5, 200) 
     }
@@ -319,6 +377,16 @@ function setup([shaders, scene_desc])
         primitives[primitive].draw(gl, program, mode)
     }
 
+    function getFreeCamMatrix(){
+        const {theta, gama, distance} = free_pars
+        const result = mult( 
+            lookAt([0, 0, distance], [0, 0, 0], [0, 1, 0]),
+            mult( rotateX(gama), rotateY(theta) )
+        )
+        result.freeCam = true
+        return result
+    }
+
     function getAxonoMatrix(){
         const {theta, gama} = axono_pars
         const result = mult( 
@@ -330,7 +398,7 @@ function setup([shaders, scene_desc])
     }
 
     function getFollowMatrix(){
-        const {distance} = following_camera_pars
+        const {distance} = follow_pars
         const heliModel = helicopter.modelMatrix
         const eye = vec3(mult(heliModel, vec4(-distance, 0, 0, 1)))
         const at =  vec3(mult(heliModel, vec4(0, 0, 0, 1)))
@@ -431,7 +499,8 @@ function setup([shaders, scene_desc])
 
         // lookAt(eye, at, up)
         if(Mview.follow) Mview = getFollowMatrix()
-        if(Mview.axono) Mview = getAxonoMatrix()
+        else if(Mview.axono) Mview = getAxonoMatrix()
+        else if (Mview.freeCam) Mview = getFreeCamMatrix()
 
         scene_graph.drawScene(draw, Mview)
     }
