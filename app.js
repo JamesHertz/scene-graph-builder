@@ -37,11 +37,19 @@ const axonoController = {
     ],
 }
 
+
 const followCamController = {
-    topic: "follow camera parameters",
-    pars: [
+    topic: "follow camera parameters", // the name of the dat.gui.folder
+    pars: [ // the list of parameters the folder will have
         {name: 'distance', MIN: 10, MAX: 20}
     ],
+    // it will also have another attribute:
+    // - folder => the correspoding dat.gui.folder for the this controller
+    // - sliders => an dictionary with the dat.gui.Controller of each parameter 
+    // - container => an dictionary/object that will have the current value of each parameters
+    // or more info about this check the function setupControllers
+
+    // the descriptions above applies to all the followinc camera controllers
 }
 
 const freeCamController  = {
@@ -134,8 +142,6 @@ const primitives = {
 //
 // we used a very trick and non-trival way of doing this
 // basically we have an array of objects called gui_controllers
-// more information about them are given in the report delivered
-// to the teachers.
 function setupControllers(){
     const gui = new dat.GUI({name: 'parameters'})
 
@@ -325,12 +331,16 @@ function setup([shaders, scene_desc])
             let dx = oldX - event.screenX
             let dy = oldY - event.screenY
 
-            const {sliders, container}  = freeCamController
+            const {sliders, container, pars}  = freeCamController
             const {sensibility} = container
 
-            sliders.theta.setValue(
-                container.theta - dx/sensibility
-            )
+            // making it possible to rotation 360 degrees :)
+            const {MAX, MIN} = pars.find(n => n.name == 'theta') 
+            let newtheta = container.theta - dx/sensibility
+            if(newtheta > MAX) newtheta = MIN
+            else if(newtheta < MIN) newtheta = MAX
+
+            sliders.theta.setValue(newtheta)
 
             sliders.gama.setValue(
                 container.gama - dy/sensibility

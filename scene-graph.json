@@ -791,6 +791,18 @@
         "medic-kit":{
             "children":[
                 {
+                    "translation":[-0.5,-0.2,0],
+                    "children": "cruz"
+                },
+                "box"
+        ]
+
+        }
+        ,
+
+        "box": {
+            "children": [
+                {
                     "color": "white",
                     "primitive": "cube"
                 },
@@ -801,10 +813,7 @@
                     "color": "red",
                     "primitive": "torus"
                 },
-                {
-                    "translation":[-0.5,-0.2,0],
-                    "children": "cruz"
-                },
+             
                 {
                     "translation":[-0.5,0.3,0],
                     "scale":[0.1,0.3,0.1],
@@ -817,10 +826,10 @@
                     "color": "black",
                     "primitive": "cube"
                 }
-        ]
+            ]
+                
+        },
 
-        }
-        ,
         "cruz":{
             "children":[
                 {
