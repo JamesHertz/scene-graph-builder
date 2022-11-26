@@ -1,3 +1,7 @@
+/**
+ * @author James Furtado (61177)
+ * @author Iago Paulo (60198)
+ */
 import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
 import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, scale, vec4, perspective, add, mult, subtract} from "../libs/MV.js";
 

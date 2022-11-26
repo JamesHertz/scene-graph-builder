@@ -1,3 +1,23 @@
+/**
+ * @author James Hertz
+ * 
+ * This library was done in order to facilitate the process of specifying
+ * the SceneGraph and manipulate it's node.
+ * 
+ * The main take away is: it takes a JSON in the constructor of the class 
+ * SceneGraph and it parses it according to a convesion defined, it's exaustive
+ * in it's error to be helpful and for future use of other people. 
+ * There are two kings of nodes the LeafNode and the Regular node, each one of
+ * them has a set of transformation that can be applied to them. The main difference
+ * is that the LeafNode represents the Leafs of our graph so it has two extra attributes
+ * that are the primitive (one of the ones passed in the SceneGraph construtor)
+ * and a color. On the other hand the Regular nodes that represents non-leaf Nodes
+ * has an extra attribute that is the children (can be both Regular nodes or Leaf nodes). 
+ *
+ * As stated above there transformation that can be applied to the nodes using the method 
+ * addTransformation or by change one of it's attributes (rotationX, translation, etc...)
+ */
+
 import {rotateX, rotateY, rotateZ, mat4, vec3, mult, translate, scalem} from "../libs/MV.js";
 
 // represents a transformation
@@ -110,6 +130,10 @@ class Node{
         this.dirty = true
     }
 
+    // calculates the node "transformation" matrix
+    // by applying the ones that correspondes to it's
+    // attributes first (in the order TRS) and the extra
+    // ones by the order they appeared/are added
     calc_model_matrix(){
         // apply the extra transformations first :)
         let modelMatrix = this.trans.reduce(
@@ -222,7 +246,9 @@ class LeafNode extends Node{
     }
 
     /**
-     *  
+     * Draws the leaf node by calling the given function 
+     * draw which will recieve the node primitive, it's modelView
+     * and it's color (an array of 3 numbers)
      * @param {Array} stack 
      * @param {(primitive, modelView, color) => void} draw 
      */
@@ -259,6 +285,10 @@ class RegularNode extends Node{
         return this.c_dict[name]
     }
 
+    // given a node names 
+    // it searches for it in it's direct nodes
+    // if no such one exist it tried on the ones that
+    // belongs to it's child that doesn't have names
     searchNode(name){
         let child;
         if(child = this.getChild(name)) return child
@@ -299,7 +329,9 @@ class RegularNode extends Node{
     }
 
     /**
-     * 
+     * calls the draw on each of it's children, it keeps the modelMatrix
+     * on the top of the stack and push and pops it after a call to one
+     * of it's child 
      * @param {Array} stack 
      * @param {(primitive, modelView, color) => void} draw 
      */
@@ -336,6 +368,7 @@ const leaf_optionals = [...optional_keys, 'color']
 const leaf_keys = ['primitive']
 const regular_keys = ['children']
 
+// some supported colors name
 const colors = {
     red: vec3(1, 0, 0),
     yellow: vec3(1, 1, 0),
@@ -356,6 +389,7 @@ function prefixErrorMessage(prefix, error){
     error.message = prefix + error.message
     return error
 }
+
 /**
  * Given an object it checks if the received object has
  * all the required keys (reqKeys) and has nothing more than
@@ -403,6 +437,8 @@ const trans_type2 = {
     'rotation-z': RotationZ
 }
 
+// checks if the given object for a translation or a scale
+// is an Array of 3 numbers, if it isn't it throws an error
 function getTransOrScale(type, trans){
     if(trans instanceof Array 
             && trans.length == 3 
@@ -410,6 +446,8 @@ function getTransOrScale(type, trans){
     throw new Error(`Invalid value for ${type}. Expected an array of 3 numbers.`)
 }
 
+// checks if the value given as an rotation
+// is a number, if it isn't it throws an error
 function getRotation(key, value){
     if(typeof(value) != 'number')
          throw new Error(
@@ -418,20 +456,31 @@ function getRotation(key, value){
     return value
 }
 
-
+// parses the color
+// the color can the name of one of the supported ones above
+// or an array of 3 (rgb) or 4 (rgba) numbers
 function parseColor(color){
     if(color === undefined) return DEFAULT_COLOR
     else if(color in colors) return colors[color]
-    else if(color instanceof Array 
-            && color.length == 3 
+    else{
+        const {length} = color
+        if(color instanceof Array 
+            && (length == 3 || length == 4) 
             && color.every(e => typeof(e) == 'number')){
                 return color
-    }else
-        throw new Error(`Invalid color:'${color}'`)
+        }else
+             throw new Error(`Invalid color:'${color}'`)
+
+    } 
 }
 
-// TODO: think about the txt ??
-// TODO: refactor the Error parsing 'extra-trans' X
+// parse an transformation of the 'extra-trans' attribute
+// these transformation should be an object of type
+// {type, value} where type is one of the transformation 
+// (rotation-x, rotation-y, translation, etc..) and the value the 
+// transformation correspoding value, for example if it's a rotation is has to be
+// and number else if it is an translation or an scale it has to be 
+// and array of 3 elements
 function parseTrans(trans){
     const {type, value} = createNode(trans, [], ['type', 'value'])
     let builder;
@@ -445,6 +494,8 @@ function parseTrans(trans){
     }
 }
 
+// it fills the nodes remaing informations
+// the ones that are common to both regular and leaf node
 function fillNodeInfo(node, info){
 
     try{
@@ -485,6 +536,8 @@ function fillNodeInfo(node, info){
     return node
 }
 
+// parses the name that can be none or a string
+// without '/' character
 function parseName(name){
     if(name == undefined || 
         typeof(name) === 'string' && !name.includes('/'))
@@ -493,6 +546,8 @@ function parseName(name){
         throw new Error(`Invalid node's name: '${name}'. Expected a string without '/' character or nothing.`)
 }
 
+// parses a leaf node given the primitives that
+// the SceneGraph supports
 function parseLeafNode(info, primitives){
     const node = createNode(info, leaf_optionals, leaf_keys)
     let  {name, primitive, color} = node
@@ -509,6 +564,10 @@ function parseLeafNode(info, primitives){
 
 }
 
+// parses a Regular node where the parseCtx
+// are informations about the parsing, it's basically
+// an object that has the key primitives, base_nodes and
+// nodes (if we are parsing the base_nodes)
 function parseRegularNode(parseCtx, info){
 
     function parseChild(child){
@@ -538,6 +597,11 @@ function parseRegularNode(parseCtx, info){
     return regularNode
 }
 
+// when parsing base-nodes we may stumble into a problem
+// that is I am parsing this regular node that has as a child
+// another base-node that I haven't parse yet. 
+// This function tries to parses that node while
+// reporting an error if a loop is found
 function checkOrderProblem(parseCtx, info){
     const {base_nodes, nodes} = parseCtx
     let node = null
@@ -553,6 +617,10 @@ function checkOrderProblem(parseCtx, info){
     return node
 }
 
+// uses to parse a node, it decides which kind of node 
+// we are dealing with and calls it's respective parser
+// The info (information about the node) can be botha json
+// or a string. In the ladder case it returns the corresponding base-node
 function parseNode(parseCtx, info){
     const {base_nodes, primitives} = parseCtx
 
@@ -589,6 +657,10 @@ function parseNode(parseCtx, info){
     }
 }
 
+// receives the whole scene and a set of primitives
+// that the scene supports and parses it.
+// the scene should be a json and include an attribute
+// 'root', it can opcionally have another attribute called 'base-nodes'
 function parseScene(scene_desc, primitives){
     let scene;
 
@@ -690,8 +762,8 @@ class SceneGraph{
      * @returns 
      */
     createNode(node_desc){
-        //if(typeof(node_desc) == 'string')
-        //    node_desc = {type:'regular', children: node_desc}
+        if(typeof(node_desc) == 'string')
+            node_desc = {type:'regular', children: node_desc} // else it would be same as .getBaseNode(node_desc)
         return parseNode(this.parseCtx, node_desc)
     }
 
