@@ -128,7 +128,9 @@ const primitives = {
 }
 
 
-// set's up the controllers (dat.guit sliders)
+// set's up the controllers (dat.guit sliders) and returns the
+// dat.gui object that will contain these contollers (cameras sliders)
+//
 // we used a very trick and non-trival way of doing this
 // basically we have an array of objects called gui_controllers
 // more information about them are given in the report delivered
@@ -140,19 +142,23 @@ function setupControllers(){
         const {topic, pars} = controller
 
         const container = {}
-        const slides = {} // will store the slide for each one of the parameter
+        const sliders = {} // will store the slide for each one of the parameter
         const folder = gui.addFolder(topic)
 
         for(let {name, MAX, MIN, DEFAULT} of pars){
             container[name] = (DEFAULT === undefined) ? MIN : DEFAULT
-            slides[name] = folder.add(container, name,  MIN, MAX)
+            sliders[name] = folder.add(container, name,  MIN, MAX)
         }
 
         folder.open()
 
-        controller.container = container
-        controller.folder = folder
-        controller.slides = slides
+        /*
+            equivalent to:
+                controller.container = container
+                controller.folder = folder
+                controller.sliders = sliders
+        */
+        Object.assign(controller, {container, folder, sliders})
     }
 
     gui.open()
@@ -167,6 +173,7 @@ function setupControllers(){
             e.stopPropagation()
         })
     }
+    return gui
 }
 
 
@@ -217,12 +224,14 @@ function setup([shaders, scene_desc])
     // the radius that the helicopter will be rotating
     const ROTATION_RADIUS = helicopter.translation[2]
     
+    // dat.gui object that contains all cameras
+    // sliders (controllers)
+    const gui = setupControllers()
 
     let canvas = document.getElementById("gl-canvas");
     let aspect = canvas.width / canvas.height;
 
     gl = setupWebGL(canvas);
-    setupControllers()
 
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
 
@@ -315,14 +324,14 @@ function setup([shaders, scene_desc])
             let dx = oldX - event.screenX
             let dy = oldY - event.screenY
 
-            const {slides, container}  = freeCamController
+            const {sliders, container}  = freeCamController
             const {sensibility} = container
 
-            slides.theta.setValue(
+            sliders.theta.setValue(
                 container.theta - dx/sensibility
             )
 
-            slides.gama.setValue(
+            sliders.gama.setValue(
                 container.gama - dy/sensibility
             )
 
@@ -339,8 +348,8 @@ function setup([shaders, scene_desc])
     window.addEventListener("wheel", e => {
         if(Mview.freeCam || Mview.follow){
             let controller = Mview.freeCam ? freeCamController : followCamController
-            const {container, slides} = controller
-            slides.distance.setValue(
+            const {container, sliders} = controller
+            sliders.distance.setValue(
                 container.distance + e.deltaY/20
             )
         }
@@ -385,7 +394,13 @@ function setup([shaders, scene_desc])
 
         // shows the one that belongs to the current camera
         // it such camera has any sliders
-        if(selFolder) selFolder.show()
+        if(selFolder) {
+            gui.show()
+            selFolder.show()
+
+        // hides the gui because these particular camera doesn't 
+        // have any sliders for it's parameters
+        }else gui.hide() 
     }
 
     // creates a new box
@@ -440,6 +455,7 @@ function setup([shaders, scene_desc])
         return ortho(-50 * aspect, 50 * aspect, -50, 50, 1, 400) 
     }
 
+    // follow camera and freeCam
     function followCameraMProjection(){
         return perspective(80, aspect, 5, 300) 
     }
