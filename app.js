@@ -566,7 +566,7 @@ function setup([shaders, scene_desc])
         heli_forward.value = h_angle
         helicopter.rotationZ = h_slope_angle
         heli_height.value = [0, h_height, 0]
-        car_sirens.rotationY = time * SIRENS_RPS// TODO: a constant
+        car_sirens.rotationY = time * SIRENS_RPS
 
     }
 
