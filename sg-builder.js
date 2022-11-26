@@ -1,5 +1,6 @@
 /**
  * @author James Hertz
+ * @author Iago Paulo
  * 
  * This library was done in order to facilitate the process of specifying
  * the SceneGraph and manipulate it's node.
