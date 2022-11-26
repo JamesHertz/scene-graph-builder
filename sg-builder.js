@@ -19,7 +19,7 @@
  * addTransformation or by change one of it's attributes (rotationX, translation, etc...)
  */
 
-import {rotateX, rotateY, rotateZ, mat4, vec3, mult, translate, scalem} from "../libs/MV.js";
+import {rotateX, rotateY, rotateZ, mat4, vec3, mult, translate, scalem} from "../../libs/MV.js";
 
 // represents a transformation
 class BaseTransformation{

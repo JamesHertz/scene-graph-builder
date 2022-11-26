@@ -2,17 +2,17 @@
  * @author James Furtado (61177)
  * @author Iago Paulo (60198)
  */
-import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../libs/utils.js";
-import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, scale, vec4, perspective, add, mult, subtract} from "../libs/MV.js";
+import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
+import { ortho, lookAt, flatten , vec3, normalMatrix, rotateX, rotateY, scale, vec4, perspective, add, mult, subtract} from "../../libs/MV.js";
 
 import { RotationY, SceneGraph, Translation } from "./sg-builder.js";
-import * as SPHERE from '../libs/objects/sphere.js'
-import * as CUBE from '../libs/objects/cube.js';
-import * as CYLINDER from '../libs/objects/cylinder.js'
-import * as TORUS from '../libs/objects/torus.js'
-import * as PYRAMID from '../libs/objects/pyramid.js'
-import * as BUNNY from '../libs/objects/bunny.js'
-import * as dat from '../libs/dat.gui.module.js'
+import * as SPHERE from '../../libs/objects/sphere.js'
+import * as CUBE from '../../libs/objects/cube.js';
+import * as CYLINDER from '../../libs/objects/cylinder.js'
+import * as TORUS from '../../libs/objects/torus.js'
+import * as PYRAMID from '../../libs/objects/pyramid.js'
+import * as BUNNY from '../../libs/objects/bunny.js'
+import * as dat from '../../libs/dat.gui.module.js'
 
 /** @type WebGLRenderingContext */
 let gl;
@@ -450,7 +450,8 @@ function setup([shaders, scene_desc])
             velocity,
             node: scene_graph.createNode({
                 ...box_node, 
-                translation: vec3(heli_pos)
+                translation: vec3(heli_pos),
+                'rotation-y': heli_forward.value // feature that doesn't appear on the scene graph
             })
         }
         scene_graph.root.addChild(box.node)
