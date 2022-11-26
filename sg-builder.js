@@ -5,16 +5,16 @@
  * the SceneGraph and manipulate it's node.
  * 
  * The main take away is: it takes a JSON in the constructor of the class 
- * SceneGraph and it parses it according to a convesion defined, it's exaustive
- * in it's error to be helpful and for future use of other people. 
- * There are two kings of nodes the LeafNode and the Regular node, each one of
- * them has a set of transformation that can be applied to them. The main difference
- * is that the LeafNode represents the Leafs of our graph so it has two extra attributes
+ * SceneGraph and it parses it according to a convesion defined (it's exaustive
+ * in it's error to be helpful and for future by other people), there are two kings 
+ * of nodes the LeafNode and the Regular node, each one of them has a set of 
+ * transformation that can be applied to. The main difference is that the 
+ * LeafNode represents the Leafs of our graph so it has two extra attributes
  * that are the primitive (one of the ones passed in the SceneGraph construtor)
  * and a color. On the other hand the Regular nodes that represents non-leaf Nodes
- * has an extra attribute that is the children (can be both Regular nodes or Leaf nodes). 
+ * has an extra attribute that is it's children (can be both Regular nodes or Leaf nodes). 
  *
- * As stated above there transformation that can be applied to the nodes using the method 
+ * As stated above there are transformation that can be applied to the nodes using the method 
  * addTransformation or by change one of it's attributes (rotationX, translation, etc...)
  */
 
