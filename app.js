@@ -64,6 +64,7 @@ const gui_controllers = [
 // our eye in the following camera will be placed
 const FOLLOW_CAM_UP_DISTANCE = 10
 
+const WHEEL_SCROLL_SENSIBILITY = 20
 // some default cameras
 const basic_cameras = {
     front: lookAt([0, 0, 100], [0, 0, 0], [0,1,0]), 
@@ -350,7 +351,7 @@ function setup([shaders, scene_desc])
             let controller = Mview.freeCam ? freeCamController : followCamController
             const {container, sliders} = controller
             sliders.distance.setValue(
-                container.distance + e.deltaY/20
+                container.distance + e.deltaY/WHEEL_SCROLL_SENSIBILITY
             )
         }
 
