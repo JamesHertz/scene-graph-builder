@@ -19,6 +19,12 @@ let last_time = undefined
 
 let time = 0;
 
+// the following three objects that finish in controllers
+// are used to keep track of the parameters of each one of the
+// cameras, also it's used to sync the parameters on the gui
+// with the it's respective value that in some cases can be altered
+// by moving the mouse, scrolling the mouse wheel etc.
+// these objects are used below where more details are given about them.
 const axonoController = {
     topic: "axono parameters",
     pars: [
@@ -34,9 +40,6 @@ const followCamController = {
     ],
 }
 
-// uses to change it's value and sync those with the 
-// gui
-// look at this later ....
 const freeCamController  = {
     topic: "free cam parameters",
     pars: [
@@ -52,6 +55,10 @@ const gui_controllers = [
     axonoController,
     freeCamController
 ]
+
+// the on the y coordinate from the helicopter
+// our eye in the following camera will be placed
+const FOLLOW_CAM_UP_DISTANCE = 10
 
 // some default cameras
 const basic_cameras = {
@@ -81,21 +88,32 @@ const MIN_DROPPING_HEIGHT = 3 * BOX_SIZE
 const MIN_HEIGHT = 0
 const MIN_FLY_HEIGHT = Math.tan(Math.PI * MAX_SLOPE_ANGLE / 180)*2 
 
-// helicopter infos
-// clean up this thing later
-let h_height = MIN_HEIGHT
-let h_angle = 0
-let h_forward_speed = 0
 
-// related to forward 
+const HELICES_RPS = 100 // helices rotation per second rate
+const SIRENS_RPS = 600 // sirens rotatio per second rate
+const HEIGHT_CHANGE_FACTOR = 20 // height change factor per second
+const ANGULAR_INC_ACC = 200 // angular increasing acceleration (when pressing ArrowLeft)
+const ANGULAR_DEC_ACC = 60 // angular decreasing acceleratioin (used to make the helicopter stop)
+
+// some information about the helicopter
+let h_height = MIN_HEIGHT // it's height
+let h_angle = 0 // the angle around the y axis
+let h_forward_speed = 0 // the angular speed that it changes it's angle
+
+// it's used to keep track of the keys that are pressed 
+// and the ones that are not. the way it's used if very simple
+// whenever the keydown event is fired we will check if it's one this keys
+// if it is we will set the corresponding key to true and we will do the
+// analogous thing when the keyup is fired
 const pressed_keys = {
     ArrowUp: false,
     ArrowDown: false,
     ArrowLeft: false
 }
 
-// used by one call of a constructor
-// of that is in sg-builder.js
+// used by the call to the constructor of SceneGraph
+// that is in sg-builder.js. Basically we are defining the
+// primitives our scene will support.
 const primitives = {
     'sphere': SPHERE,
     'cube': CUBE,
@@ -106,9 +124,11 @@ const primitives = {
 }
 
 
-// IDEA: when we are not in the camera 1 we shouldn't be
-// able to these parameters
-// TODO: use the .hide() to do this effect :)
+// set's up the controllers (dat.guit sliders)
+// we used a very trick and non-trival way of doing this
+// basically we have an array of objects called gui_controllers
+// more information about them are given in the report delivered
+// to the teachers.
 function setupControllers(){
     const gui = new dat.GUI({name: 'parameters'})
 
@@ -147,7 +167,9 @@ function setupControllers(){
 
 
 /**
- * 
+ * Complete some part of the scene that would bit
+ * more boring doing in the json file. It basically
+ * completes the stree white strips and the ladder's rungs. 
  * @param {SceneGraph} sg 
  */
 function complete_scene(sg){
@@ -188,7 +210,6 @@ function setup([shaders, scene_desc])
     const heli_height = helicopter.addTransformation(new Translation([0, 0, 0]))
     const heli_forward = helicopter.addTransformation(new RotationY(0))
     
-
     // the radius that the helicopter will be rotating
     const ROTATION_RADIUS = helicopter.translation[2]
     
@@ -203,14 +224,18 @@ function setup([shaders, scene_desc])
 
     let Mview; 
     let mProjection;
-    let mProjFunc;
 
+    // since we want to have differents cameras hence different Mview
+    // and also we want some of them to have different projection matrix
+    // this one is used to recalculate the current mProjection choosed
+    let mProjFunc; 
+
+    // used to set the modelView and the respective mProjection
     setMview(getAxonoMatrix())
-
-
 
     mode = gl.TRIANGLES
 
+    // init's the primitives/figures/objects on the folder libs/objects
     for(let key in primitives) primitives[key].init(gl)
 
     resize_canvas()
@@ -221,10 +246,9 @@ function setup([shaders, scene_desc])
     
     window.requestAnimationFrame(render);
 
-   
     window.addEventListener('keydown', e => {
         switch(e.key){
-            case '0':
+            case '0': // free camera
                 setMview(getFreeCamMatrix(), followCameraMProjection)
                 break
             case '1':
@@ -251,7 +275,6 @@ function setup([shaders, scene_desc])
                 break
 
             case ' ': // space
-                // get the intial velocity
                 if(h_height > MIN_DROPPING_HEIGHT)
                     boxes.push(createBox())
                 break
@@ -268,6 +291,10 @@ function setup([shaders, scene_desc])
             pressed_keys[e.key] = false
     })
 
+    // we used canvas to avoid problems while change the parameters
+    // on the dat.gui sliders.
+    // this listener change the parameters of free cam
+    // when such is selected and we click and move our mouse
     canvas.addEventListener("mousedown", e => {
         if(!Mview.freeCam) return 
 
@@ -302,6 +329,9 @@ function setup([shaders, scene_desc])
         window.addEventListener('mousemove', update_pars)
     })
 
+    // used to set the distance on the free Cam of the 
+    // follow camera when we scrool the mouse wheel 
+    // we used two fingers on the mouse pad to scrool the page :)
     window.addEventListener("wheel", e => {
         if(Mview.freeCam || Mview.follow){
             let controller = Mview.freeCam ? freeCamController : followCamController
@@ -323,6 +353,10 @@ function setup([shaders, scene_desc])
         gl.viewport(0,0,canvas.width, canvas.height);
     }
 
+    // get's the folder of the camera being selected
+    // we use to this to only display the sliders of
+    // the current selected camera and if such camera doesn't
+    // have sliders we don't display any slider
     function getSelCamFolder(){
         let selected = null
         if(Mview.axono) selected = axonoController
@@ -338,35 +372,49 @@ function setup([shaders, scene_desc])
             mProjFunc = newMProjFunc
             mProjection = mProjFunc()
         }
-        // do fun stuffs here
-        // folders
+        // get's the current camera folder
         const selFolder = getSelCamFolder()
 
+        // hides all folders
         for(let {folder} of gui_controllers)
             folder.hide()
 
+        // shows the one that belongs to the current camera
+        // it such camera has any sliders
         if(selFolder) selFolder.show()
     }
 
+    // creates a new box
     function createBox(){
+        // I called it heli_pos but it's more like
+        // the position that is BOX_SIZE below the helicopter
         const heli_pos = mult(
             helicopter.modelMatrix,
             vec4(0, -BOX_SIZE, 0, 1) 
         )
 
+        // get's the angular speed
         const angular_speed = -ROTATION_RADIUS * h_forward_speed/180 * Math.PI
 
+        // get's the velocity vector using the helicopter modelMatrix
         const velocity_vector = subtract(
             mult(helicopter.modelMatrix, vec4(1, 0, 0, 1)),
             mult(helicopter.modelMatrix, vec4(0, 0, 0, 1))
         )
 
+        // calculates the velocity that the helicopter will have
+        // scaled by a factor for not to seem non realistic
         const velocity = vec3(
             scale(BOX_SPEED_FACTOR * angular_speed, velocity_vector)
         )
 
-        velocity[1] = 0 // we don't want it's y coordinates
+        velocity[1] = 0 // we are not interested in the y coordinate of the vector
         
+        // creates a new box
+        // a box is a object with the following:
+        // life (the remaning life of the helicopter)
+        // velocity (the vector of the velocity)
+        // node (the corresponding node that appears in the scene)
         const box = {
             life: BOX_LIFE,
             velocity,
@@ -379,7 +427,7 @@ function setup([shaders, scene_desc])
         return box
     }
 
-    // define the mProjections functions
+    // we define some mProjections functions
     function defaultMProjection(){
         return ortho(-30 * aspect, 30 * aspect, -30, 30, 1, 400) 
     }
@@ -393,8 +441,13 @@ function setup([shaders, scene_desc])
     }
 
 
+    // used by the SceneGraph call to the function drawScene
+    // where primitive is a string with the name of one of the primitives
+    // we've stated we support when we sent it in it's constructor (ScaneGraph's)
     function draw(primitive, modelViewMatrix, color){
 
+        // after a bit of search I found this to be helpful
+        // the full explantion of this is found in the fragment shader
         const mNormal = normalMatrix(modelViewMatrix, true)
 
         // upload color
@@ -408,7 +461,10 @@ function setup([shaders, scene_desc])
 
         primitives[primitive].draw(gl, program, mode)
     }
-
+    
+    // functions used to calculate some of the cameras 
+    // (the dynamic ones/the ones that has parameters that can be changed
+    //  by the user)
     function getFreeCamMatrix(){
         const {theta, gama, distance} = freeCamController.container 
         const result = mult( 
@@ -434,20 +490,23 @@ function setup([shaders, scene_desc])
         const heliModel = helicopter.modelMatrix
         const eye = vec3(mult(heliModel, vec4(-distance, 0, 0, 1)))
         const at =  vec3(mult(heliModel, vec4(0, 0, 0, 1)))
-        eye[1] = at[1] + 10 // TODO: make this a constant
+
+        eye[1] = at[1] + FOLLOW_CAM_UP_DISTANCE 
 
         const result = lookAt(eye, at, [0, 1, 0])
         result.follow = true
         return result
     }
 
+    // evolves the boxes which mean it reduces it's life
+    // and calculates their new position and velocity
     function evolve_boxes(delta_time){
 
         // the boxes that stills alive
         const rem_boxes = []
         for(let b of boxes){
             b.life -= delta_time 
-            if(b.life <= 0)
+            if(b.life <= 0) // our life has ran off, so we need to remove it from the scene
                 scene_graph.root.removeChild(b.node)
             else{
                 rem_boxes.push(b)
@@ -468,19 +527,20 @@ function setup([shaders, scene_desc])
         boxes = rem_boxes
     }
 
-
-    // TODO: add constants
+    // evolves the scene, the position of the helicopter
+    // it's height, it's angular velocity and the rotation of
+    // the fireman sirens and the rotation of the helices
     function evolve_scene(delta_time){
 
-        const helices_rotation_angle = (h_height > MIN_HEIGHT) ? time * 2 * Math.PI * 100 : 0
+        const helices_rotation_angle = (h_height > MIN_HEIGHT) ? time * 2 * Math.PI * HELICES_RPS : 0
         
         // updates the velocity
         if(pressed_keys.ArrowLeft && h_height > MIN_FLY_HEIGHT){
-            h_forward_speed = Math.max(h_forward_speed - delta_time * 200,  MAX_SPEED)
+            h_forward_speed = Math.max(h_forward_speed - delta_time * ANGULAR_INC_ACC,  MAX_SPEED)
         }
 
         if(h_forward_speed){
-            h_forward_speed = Math.min(0, h_forward_speed + delta_time * 60)
+            h_forward_speed = Math.min(0, h_forward_speed + delta_time * ANGULAR_DEC_ACC)
             h_angle += h_forward_speed * delta_time
         }
 
@@ -488,12 +548,12 @@ function setup([shaders, scene_desc])
 
         // updates the height
         if(pressed_keys.ArrowUp) {
-            h_height = Math.min(h_height + delta_time * 20, MAX_HEIGHT)
+            h_height = Math.min(h_height + delta_time * HEIGHT_CHANGE_FACTOR, MAX_HEIGHT)
         }
 
         if(pressed_keys.ArrowDown) {
             const min_h = (h_slope_angle> 0) ? MIN_FLY_HEIGHT : MIN_HEIGHT 
-            h_height = Math.max(h_height - delta_time * 20, min_h)
+            h_height = Math.max(h_height - delta_time * HEIGHT_CHANGE_FACTOR, min_h)
         }
 
         // updates the scene nodes
@@ -502,7 +562,7 @@ function setup([shaders, scene_desc])
         heli_forward.value = h_angle
         helicopter.rotationZ = h_slope_angle
         heli_height.value = [0, h_height, 0]
-        car_sirens.rotationY = time * 600 // TODO: a constant
+        car_sirens.rotationY = time * SIRENS_RPS// TODO: a constant
 
     }
 
@@ -530,10 +590,13 @@ function setup([shaders, scene_desc])
         evolve_boxes(delta_time)
 
         // lookAt(eye, at, up)
+        // if one of the dynamic cameras/the ones the user can change the parameters
+        // is being used, we need to recalculate it.
         if(Mview.follow) Mview = getFollowMatrix()
         else if(Mview.axono) Mview = getAxonoMatrix()
         else if (Mview.freeCam) Mview = getFreeCamMatrix()
 
+        // draws the scene
         scene_graph.drawScene(draw, Mview)
     }
 }
@@ -541,5 +604,6 @@ function setup([shaders, scene_desc])
 const urls = ["shader.vert", "shader.frag"];
 Promise.all([
     loadShadersFromURLS(urls),
-    fetch('scene-graph.json').then(sg => sg.json())
+    // get's the file scene-graph.json and parses it to json
+    fetch('scene-graph.json').then(sg => sg.json()) 
 ]).then(setup)
