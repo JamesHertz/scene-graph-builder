@@ -30,18 +30,10 @@ let time = 0;
 // by moving the mouse, scrolling the mouse wheel etc.
 // these objects are used below where more details are given about them.
 const axonoController = {
-    topic: "axono parameters",
-    pars: [
+    topic: "axono parameters", // the name of the dat.gui.folder
+    pars: [ // the list of parameters the folder will have
         {name: 'theta', MIN: -180, MAX: 180, DEFAULT: 60},
         {name: 'gama', MIN: -90, MAX: 90, DEFAULT: 15}
-    ],
-}
-
-
-const followCamController = {
-    topic: "follow camera parameters", // the name of the dat.gui.folder
-    pars: [ // the list of parameters the folder will have
-        {name: 'distance', MIN: 10, MAX: 20}
     ],
     // it will also have another attribute:
     // - folder => the correspoding dat.gui.folder for the this controller
@@ -50,6 +42,7 @@ const followCamController = {
     // or more info about this check the function setupControllers
 
     // the descriptions above applies to all the followinc camera controllers
+
 }
 
 const freeCamController  = {
@@ -63,7 +56,6 @@ const freeCamController  = {
 }
 
 const gui_controllers = [
-    followCamController,
     axonoController,
     freeCamController
 ]
@@ -79,39 +71,6 @@ const basic_cameras = {
     top: lookAt([0, 100, 0], [0, 0, 0], [0,0,-1]),
     right: lookAt([100, 0, 0], [0, 0, 0], [0,1,0]),
 }
-
-// box constants
-const BOX_SIZE = 2
-const BOX_LIFE = 5 // seconds
-const BOX_HALF_SIZE = BOX_SIZE /2
-const BOX_GRAV_CONSTANT = -98 
-// the portion of the helicopeter speed the box will take 
-const BOX_SPEED_FACTOR = 0.5 
-
-const box_node = {
-    scale: [BOX_SIZE, BOX_SIZE, BOX_SIZE],
-    children: "medic-kit"
-}
-
-// some constants related to the helicopter
-const MAX_SLOPE_ANGLE = 30
-const MAX_SPEED = -200
-const MAX_HEIGHT = 20
-const MIN_DROPPING_HEIGHT = 3 * BOX_SIZE
-const MIN_HEIGHT = 0
-const MIN_FLY_HEIGHT = Math.tan(Math.PI * MAX_SLOPE_ANGLE / 180)*2 
-
-
-const HELICES_RPS = 100 // helices rotation per second rate
-const SIRENS_RPS = 600 // sirens rotatio per second rate
-const HEIGHT_CHANGE_FACTOR = 20 // height change factor per second
-const ANGULAR_INC_ACC = 200 // angular increasing acceleration (when pressing ArrowLeft)
-const ANGULAR_DEC_ACC = 60 // angular decreasing acceleratioin (used to make the helicopter stop)
-
-// some information about the helicopter
-let h_height = MIN_HEIGHT // it's height
-let h_angle = 0 // the angle around the y axis
-let h_forward_speed = 0 // the angular speed that it changes it's angle
 
 // it's used to keep track of the keys that are pressed 
 // and the ones that are not. the way it's used if very simple
@@ -184,55 +143,11 @@ function setupControllers(){
 }
 
 
-/**
- * Complete some part of the scene that would bit
- * more boring doing in the json file. It basically
- * completes the stree white strips and the ladder's rungs. 
- * @param {SceneGraph} sg 
- */
-function complete_scene(sg){
-    const street = sg.getBaseNode('street')
-    for(let i = 0; i < 50; i++){
-        street.addChild(
-            sg.createNode({
-                translation: [0, 0, 3 * i],
-                children: "street-strips"
-            })
-        )
-    }
-
-    const ladder = sg.getBaseNode("ladder")
-    for(let i = 0; i < 9; i++){
-        ladder.addChild(
-            sg.createNode({
-                translation: [0, i, 0],
-                children: "ladder-rung"
-            })
-        )
-    }
-
-}
 
 function setup([shaders, scene_desc])
 {
-    let boxes = [] // an array of objects {node, life, velocity}
     const scene_graph = new SceneGraph(scene_desc, Object.keys(primitives))
 
-    complete_scene(scene_graph)
-
-    const helicopter = scene_graph.findNode('helicopter')
-    const tail_helices = scene_graph.findNode('helicopter/tail/tail-helices')
-    const upper_helices = scene_graph.getBaseNode('upper-helices')
-    const car_sirens = scene_graph.getBaseNode('car-sirens')
-
-    const heli_height = helicopter.addTransformation(new Translation([0, 0, 0]))
-    const heli_forward = helicopter.addTransformation(new RotationY(0))
-    
-    // the radius that the helicopter will be rotating
-    const ROTATION_RADIUS = helicopter.translation[2]
-    
-    // dat.gui object that contains all cameras
-    // sliders (controllers)
     const gui = setupControllers()
 
     let canvas = document.getElementById("gl-canvas");
@@ -283,20 +198,12 @@ function setup([shaders, scene_desc])
             case '4':
                 setMview(basic_cameras.right)
                 break
-            case '5':
-                setMview(getFollowMatrix(), followCameraMProjection)
-                break
             case 'w':
                 mode = gl.LINES
                 break
 
             case 's':
                 mode = gl.TRIANGLES
-                break
-
-            case ' ': // space
-                if(h_height > MIN_DROPPING_HEIGHT)
-                    boxes.push(createBox())
                 break
 
             default:
@@ -382,12 +289,10 @@ function setup([shaders, scene_desc])
     // the current selected camera and if such camera doesn't
     // have sliders we don't display any slider
     function getSelCamFolder(){
-        let selected = null
-        if(Mview.axono) selected = axonoController
-        else if(Mview.follow) selected = followCamController 
-        else if(Mview.freeCam) selected = freeCamController
+        if(Mview.axono) return axonoController.folder
+        if(Mview.freeCam) return freeCamController.folder
 
-        return (selected) ? selected.folder : null
+        return null
     }
 
     function setMview(newMview, newMProjFunc=defaultMProjection){
@@ -414,49 +319,6 @@ function setup([shaders, scene_desc])
         }else gui.hide() 
     }
 
-    // creates a new box
-    function createBox(){
-        // I called it heli_pos but it's more like
-        // the position that is BOX_SIZE below the helicopter
-        const heli_pos = mult(
-            helicopter.modelMatrix,
-            vec4(0, -BOX_SIZE, 0, 1) 
-        )
-
-        // get's the angular speed
-        const angular_speed = -ROTATION_RADIUS * h_forward_speed/180 * Math.PI
-
-        // get's the velocity vector using the helicopter modelMatrix
-        const velocity_vector = subtract(
-            mult(helicopter.modelMatrix, vec4(1, 0, 0, 1)),
-            mult(helicopter.modelMatrix, vec4(0, 0, 0, 1))
-        )
-
-        // calculates the velocity that the helicopter will have
-        // scaled by a factor for not to seem non realistic
-        const velocity = vec3(
-            scale(BOX_SPEED_FACTOR * angular_speed, velocity_vector)
-        )
-
-        velocity[1] = 0 // we are not interested in the y coordinate of the vector
-        
-        // creates a new box
-        // a box is a object with the following:
-        // life (the remaning life of the helicopter)
-        // velocity (the vector of the velocity)
-        // node (the corresponding node that appears in the scene)
-        const box = {
-            life: BOX_LIFE,
-            velocity,
-            node: scene_graph.createNode({
-                ...box_node, 
-                translation: vec3(heli_pos),
-                'rotation-y': heli_forward.value // feature that doesn't appear on the scene graph
-            })
-        }
-        scene_graph.root.addChild(box.node)
-        return box
-    }
 
     // we define some mProjections functions
     function defaultMProjection(){
@@ -517,86 +379,7 @@ function setup([shaders, scene_desc])
         return result
     }
 
-    function getFollowMatrix(){
-        const {distance} = followCamController.container
-        const heliModel = helicopter.modelMatrix
-        const eye = vec3(mult(heliModel, vec4(-distance, 0, 0, 1)))
-        const at =  vec3(mult(heliModel, vec4(0, 0, 0, 1)))
 
-        eye[1] = at[1] + FOLLOW_CAM_UP_DISTANCE 
-
-        const result = lookAt(eye, at, [0, 1, 0])
-        result.follow = true
-        return result
-    }
-
-    // evolves the boxes which mean it reduces it's life
-    // and calculates their new position and velocity
-    function evolve_boxes(delta_time){
-
-        // the boxes that stills alive
-        const rem_boxes = []
-        for(let b of boxes){
-            b.life -= delta_time 
-            if(b.life <= 0) // our life has ran off, so we need to remove it from the scene
-                scene_graph.root.removeChild(b.node)
-            else{
-                rem_boxes.push(b)
-                // if helicopter is not in the ground
-                if(b.velocity != null){
-                    b.velocity[1] += BOX_GRAV_CONSTANT * delta_time
-                    let position = b.node.translation
-                    position = add(position, scale(delta_time, b.velocity))
-
-                    if(position[1] <= BOX_HALF_SIZE){
-                        position[1] = BOX_HALF_SIZE
-                        b.velocity= null // we've reached the ground
-                    } 
-                    b.node.translation = position
-                }
-           } 
-        }
-        boxes = rem_boxes
-    }
-
-    // evolves the scene, the position of the helicopter
-    // it's height, it's angular velocity and the rotation of
-    // the fireman sirens and the rotation of the helices
-    function evolve_scene(delta_time){
-
-        const helices_rotation_angle = (h_height > MIN_HEIGHT) ? time * 2 * Math.PI * HELICES_RPS : 0
-        
-        // updates the velocity
-        if(pressed_keys.ArrowLeft && h_height > MIN_FLY_HEIGHT){
-            h_forward_speed = Math.max(h_forward_speed - delta_time * ANGULAR_INC_ACC,  MAX_SPEED)
-        }
-
-        if(h_forward_speed){
-            h_forward_speed = Math.min(0, h_forward_speed + delta_time * ANGULAR_DEC_ACC)
-            h_angle += h_forward_speed * delta_time
-        }
-
-        const h_slope_angle = h_forward_speed/MAX_SPEED * MAX_SLOPE_ANGLE
-
-        // updates the height
-        if(pressed_keys.ArrowUp) {
-            h_height = Math.min(h_height + delta_time * HEIGHT_CHANGE_FACTOR, MAX_HEIGHT)
-        }
-
-        if(pressed_keys.ArrowDown) {
-            const min_h = (h_slope_angle> 0) ? MIN_FLY_HEIGHT : MIN_HEIGHT 
-            h_height = Math.max(h_height - delta_time * HEIGHT_CHANGE_FACTOR, min_h)
-        }
-
-        // updates the scene nodes
-        upper_helices.rotationY = helices_rotation_angle
-        tail_helices.rotationZ = helices_rotation_angle
-        heli_forward.value = h_angle
-        helicopter.rotationZ = h_slope_angle
-        heli_height.value = [0, h_height, 0]
-        car_sirens.rotationY = time * SIRENS_RPS
-
-    }
 
     function render(timestamp)
     {
@@ -618,14 +401,11 @@ function setup([shaders, scene_desc])
         
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
 
-        evolve_scene(delta_time)
-        evolve_boxes(delta_time)
 
         // lookAt(eye, at, up)
         // if one of the dynamic cameras/the ones the user can change the parameters
         // is being used, we need to recalculate it.
-        if(Mview.follow) Mview = getFollowMatrix()
-        else if(Mview.axono) Mview = getAxonoMatrix()
+        if(Mview.axono) Mview = getAxonoMatrix()
         else if (Mview.freeCam) Mview = getFreeCamMatrix()
 
         // draws the scene
