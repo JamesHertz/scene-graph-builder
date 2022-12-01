@@ -48,9 +48,9 @@ const axonoController = {
 const freeCamController  = {
     topic: "free cam parameters",
     pars: [
-        {name: 'theta', MIN: -180, MAX: 180, DEFAULT: 50}, 
-        {name: 'gama', MIN: 0, MAX: 90, DEFAULT: 25},
-        {name: 'distance', MIN: 25, MAX: 150, DEFAULT: 80},
+        {name: 'theta', MIN: -180, MAX: 180, DEFAULT: 130}, 
+        {name: 'gama', MIN: 0, MAX: 90, DEFAULT: 30},
+        {name: 'distance', MIN: 25, MAX: 150, DEFAULT: 70},
         {name: "sensibility", MIN: 5, MAX: 10}
     ],
 }
@@ -166,7 +166,7 @@ function setup([shaders, scene_desc])
     let mProjFunc; 
 
     // used to set the modelView and the respective mProjection
-    setMview(getAxonoMatrix())
+    setMview(getFreeCamMatrix(), followCameraMProjection)
 
     mode = gl.TRIANGLES
 
