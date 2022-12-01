@@ -60,10 +60,6 @@ const gui_controllers = [
     freeCamController
 ]
 
-// the on the y coordinate from the helicopter
-// our eye in the following camera will be placed
-const FOLLOW_CAM_UP_DISTANCE = 10
-
 const WHEEL_SCROLL_SENSIBILITY = 20
 // some default cameras
 const basic_cameras = {
@@ -141,8 +137,6 @@ function setupControllers(){
     }
     return gui
 }
-
-
 
 function setup([shaders, scene_desc])
 {

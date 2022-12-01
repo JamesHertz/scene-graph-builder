@@ -382,6 +382,7 @@ const leaf_keys = ['primitive']
 const regular_keys = ['children']
 
 // some supported colors name
+// FIX THIS MESS
 const colors = {
     red: vec3(1, 0, 0),
     yellow: vec3(1, 1, 0),

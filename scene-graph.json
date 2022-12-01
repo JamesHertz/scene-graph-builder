@@ -9,7 +9,27 @@
                 "primitive": "cube"
             },
 
-            "building"
+            "building",
+            {
+                "children": [
+                    {
+                        "translation": [10, 0, 10],
+                        "children": "tree"
+                    },
+                    {
+                        "translation": [ -10, 0, 10],
+                        "children": "tree"
+                    },
+                    {
+                        "translation": [ 10, 0, -10],
+                        "children": "tree"
+                    },
+                    {
+                        "translation": [ -10, 0, -10],
+                        "children": "tree"
+                    }
+                ]
+            }
             
         ]
     },
@@ -32,8 +52,36 @@
                 }
     
             ]
-       }
+       },
 
-    } 
+       "tree": {
+
+            "children": [
+                {
+                    "name": "leafs",
+                    "translation": [0, 10, 0],
+                    "scale": [5, 10, 5],
+                    "children":[
+                        {
+                            "color": "green",
+                            "rotation-y": 45,
+                            "primitive": "pyramid"
+                        },
+                        {
+                            "primitive": "pyramid",
+                            "color": "dark-green"
+                        }
+                    ]
+
+                },
+                {
+                    "translation": [0, 2.5, 0],
+                    "scale": [1, 5, 1],
+                    "color": "brown",
+                    "primitive": "cylinder"
+                }
+            ]
+       }
+    }
 
 }
