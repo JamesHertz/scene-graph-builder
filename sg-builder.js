@@ -125,6 +125,18 @@ class Node{
         this._name = name
         this.dirty = true // means a change was made so the modelMatrix needs to be recalculated
         this.trans = [] // adicionals transformations that can be added to the node
+
+        // inits transformations
+        for(let [attr, builder] of [
+            ['_translation', Translation],
+            ['_rotationX', RotationX],
+            ['_rotationY', RotationY],
+            ['_rotationZ', RotationZ], 
+            ['_scale', Scale]
+        ]){
+
+            this[attr] = new builder(null, this)
+        }
     }
     
     changeHandler(){
@@ -148,7 +160,7 @@ class Node{
             '_scale'
         ]){
             const trans = this[k]
-            if(trans)
+            if(trans.value !== null)
                 modelMatrix = mult(modelMatrix, trans.transMatrix)
         }
 
@@ -164,7 +176,7 @@ class Node{
     }
 
     set scale(newScale){
-        this._scale = new Scale(newScale, this)
+        this._scale.value = newScale
     } 
 
     get translation(){
@@ -172,7 +184,7 @@ class Node{
     }
 
     set translation(newTranslation){
-        this._translation = new Translation(newTranslation, this)
+        this._translation.value = newTranslation
     }
 
     get rotationX(){
@@ -180,7 +192,7 @@ class Node{
     }
 
     set rotationX(newRotationX){
-        this._rotationX = new RotationX(newRotationX, this)
+        this._rotationX.value = newRotationX
     }
 
     get rotationY(){
@@ -188,7 +200,7 @@ class Node{
     }
 
     set rotationY(newRotationY){
-        this._rotationY = new RotationY(newRotationY, this)
+        this._rotationY.value = newRotationY
     }
 
     get rotationZ(){
@@ -196,7 +208,7 @@ class Node{
     }
 
     set rotationZ(newRotationZ){
-        this._rotationZ = new RotationZ(newRotationZ, this)
+        this._rotationZ.value = newRotationZ
     }
 
     addTransformation(trans){
